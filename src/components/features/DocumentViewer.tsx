@@ -29,6 +29,10 @@ export const DocumentViewerEnhanced = ({ documentId, zoom = 1 }: DocumentViewerE
     setNumPages(numPages);
   };
 
+  const options = React.useMemo(() => ({
+    httpHeaders: { 'Authorization': `Bearer ${token}` }
+  }), [token]);
+
   if (!documentId || !token) return null;
 
   return (
@@ -41,10 +45,8 @@ export const DocumentViewerEnhanced = ({ documentId, zoom = 1 }: DocumentViewerE
         } as any)}
       >
         <Document
-          file={{
-            url: `/api/v1/pdfs/${documentId}`,
-            httpHeaders: { 'Authorization': `Bearer ${token}` }
-          }}
+          file={`/api/v1/pdfs/${documentId}`}
+          options={options}
           onLoadSuccess={onDocumentLoadSuccess}
           loading={
             <div className="flex flex-col items-center justify-center p-32 gap-4 text-brand-600">

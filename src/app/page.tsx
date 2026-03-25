@@ -3,7 +3,11 @@
 import { EnhancedSidebar } from '@/components/layout/Sidebar';
 import { useIngesta } from '@/hooks/useIngesta';
 import { EnhancedProgressValidation } from '@/components/features/ProgressValidation';
-import { DocumentViewerEnhanced } from '@/components/features/DocumentViewer';
+import dynamic from 'next/dynamic';
+const DocumentViewerEnhanced = dynamic(
+  () => import('@/components/features/DocumentViewer').then(mod => mod.DocumentViewerEnhanced),
+  { ssr: false }
+);
 import { EnhancedIdentityCard, SummaryTable, ActionCard } from '@/components/features/InsightCards';
 import { EnhancedCommandBar } from '@/components/layout/CommandBar';
 import { ConnectivityGuard } from '@/components/feedback/ConnectivityGuard';
