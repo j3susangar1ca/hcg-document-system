@@ -1,10 +1,8 @@
-use tauri::{AppHandle, Manager, Emitter};
-use serde::{Serialize, Deserialize};
+use tauri::{AppHandle, Emitter};
+use serde::Serialize;
 use sqlx::SqlitePool;
 use std::path::{Path, PathBuf};
 use base64::{Engine as _, engine::general_purpose};
-use sqlx::Row;
-use std::process::Stdio;
 use tokio::process::Command;
 
 #[derive(Serialize, Clone)]

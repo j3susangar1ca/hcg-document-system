@@ -1,5 +1,6 @@
 use axum::{
-    http::{Request, StatusCode},
+    extract::Request,
+    http::StatusCode,
     middleware::Next,
     response::Response,
 };
@@ -12,7 +13,7 @@ pub struct Claims {
     pub exp: usize,
 }
 
-pub async fn auth_middleware<B>(req: Request<B>, next: Next<B>) -> Result<Response, StatusCode> {
+pub async fn auth_middleware(req: Request, next: Next) -> Result<Response, StatusCode> {
     let auth_header = req.headers()
         .get("Authorization")
         .and_then(|h| h.to_str().ok())

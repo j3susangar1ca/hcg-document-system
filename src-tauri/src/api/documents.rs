@@ -23,7 +23,7 @@ pub async fn stream_pdf_handler(
     let ruta_blob: String = doc.get("ruta_blob");
 
     // 2. Abrir archivo y crear stream asíncrono
-    let file = File::open(doc.ruta_blob).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
+    let file = File::open(&ruta_blob).await.map_err(|_| StatusCode::INTERNAL_SERVER_ERROR)?;
     let stream = ReaderStream::new(file);
     let body = Body::from_stream(stream);
 
