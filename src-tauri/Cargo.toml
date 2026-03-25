@@ -22,7 +22,7 @@ image = "0.24"
 v4l = "0.14"
 
 [build-dependencies]
-tauri-build = "1.5"
+tauri-build = "2.0.0-rc"
 
 [features]
 default = ["custom-protocol"]
