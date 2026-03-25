@@ -1,7 +1,7 @@
 "use client";
 
 import { Inter } from "next/font/google";
-import "../styles/globals.css";
+import "./globals.css";
 import { FluentProvider, webLightTheme, webDarkTheme } from '@fluentui/react-components';
 import { useMediaQuery } from '@/hooks/useMediaQuery';
 
