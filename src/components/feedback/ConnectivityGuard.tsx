@@ -23,8 +23,11 @@ export const ConnectivityGuard = () => {
     <AnimatePresence>
       {!isOnline && (
         <motion.div 
-          initial={{ opacity: 0 }} animate={{ opacity: 1 }}
-          className="fixed inset-0 z-[200] bg-white/60 backdrop-blur-xl flex flex-col items-center justify-center p-10 text-center"
+          {...({
+            initial: { opacity: 0 },
+            animate: { opacity: 1 },
+            className: "fixed inset-0 z-[200] bg-white/60 backdrop-blur-xl flex flex-col items-center justify-center p-10 text-center"
+          } as any)}
         >
           <div className="w-24 h-24 bg-red-50 text-red-600 rounded-[40px] flex items-center justify-center mb-8 shadow-xl shadow-red-100">
             <WifiOff size={48} />
