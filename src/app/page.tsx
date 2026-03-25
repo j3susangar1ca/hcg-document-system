@@ -92,7 +92,7 @@ export default function Dashboard() {
              />
            </div>
          ) : (
-           <DocumentViewerEnhanced pages={[]} />
+           <DocumentViewerEnhanced documentId={result?.identity.folio || ""} />
          )}
 
          {/* Info Badge when not analyzing */}

@@ -9,12 +9,12 @@ import { Loader2, AlertTriangle } from 'lucide-react';
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 
-interface DocumentViewerProps {
+interface DocumentViewerEnhancedProps {
   documentId: string;
   zoom?: number;
 }
 
-export const DocumentViewer = ({ documentId, zoom = 1 }: DocumentViewerProps) => {
+export const DocumentViewerEnhanced = ({ documentId, zoom = 1 }: DocumentViewerEnhancedProps) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [token, setToken] = useState<string>('');
 
