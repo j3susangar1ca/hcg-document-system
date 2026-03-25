@@ -1,46 +1,110 @@
-import React from 'react';
-import { Search, ZoomIn, ZoomOut, RotateCcw } from 'lucide-react';
+"use client";
 
-interface DocumentViewerProps {
-  zoom?: number;
-  rotation?: number;
-}
+import React, { useRef, useEffect, useState } from 'react';
+import { useVirtualizer } from '@tanstack/react-virtual';
+import { motion } from 'framer-motion';
+import { FileText, Loader2 } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export const DocumentViewer: React.FC<DocumentViewerProps> = ({ zoom = 100, rotation = 0 }) => {
-  return (
-    <div className="flex-1 overflow-auto bg-[#f3f3f3] flex flex-col items-center p-8">
-      <div className="sticky top-0 z-20 w-full flex justify-between items-center mb-6 px-4 py-2 bg-white/60 backdrop-blur-md rounded-2xl shadow-sm border border-gray-100">
-        <div className="flex gap-2">
-          <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"><ZoomIn size={20} /></button>
-          <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"><ZoomOut size={20} /></button>
-          <button className="p-2 hover:bg-gray-100 rounded-lg text-gray-600"><RotateCcw size={20} /></button>
+export const DocumentViewerEnhanced: React.FC<{ pages?: string[] }> = ({ pages = [] }) => {
+  const parentRef = useRef<HTMLDivElement>(null);
+  
+  const virtualizer = useVirtualizer({
+    count: pages.length || 1,
+    getScrollElement: () => parentRef.current,
+    estimateSize: () => 1100, // Altura estimada de página A4 en px
+    overscan: 2, 
+  });
+
+  if (pages.length === 0) {
+    return (
+      <div className="flex-1 flex flex-col items-center justify-center text-gray-400 bg-gray-50/50">
+        <div className="w-64 h-80 bg-white shadow-glass rounded-sm border border-gray-100 flex flex-col items-center justify-center p-8 text-center">
+          <FileText size={48} className="text-gray-200 mb-4" />
+          <p className="text-sm font-medium">Arrastra un documento para comenzar el análisis</p>
+          <div className="w-full h-1 bg-gray-100 rounded-full mt-6 overflow-hidden">
+             <motion.div 
+               {...({
+                 className: "h-full bg-brand-500/20",
+                 animate: { x: [-100, 200] },
+                 transition: { repeat: Infinity, duration: 2 },
+                 style: { width: '40%' }
+               } as any)}
+             />
+          </div>
         </div>
-        <div className="flex-1 mx-8 max-w-lg relative text-gray-400 group">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 group-focus-within:text-blue-600" size={18} />
-          <input 
-            type="text" 
-            placeholder="Buscar en el documento (FTS5)..." 
-            className="w-full bg-gray-50/50 border border-gray-100 rounded-xl py-2 pl-10 pr-4 focus:outline-none focus:ring-2 focus:ring-blue-600/20 focus:bg-white transition-all"
-          />
-        </div>
-        <div className="text-gray-500 font-medium">Page 1 of 1</div>
       </div>
+    );
+  }
 
+  return (
+    <div ref={parentRef} className="flex-1 overflow-auto bg-gray-100/50 p-8 scroll-smooth">
       <div 
-        className="bg-white shadow-2xl rounded-sm transition-all duration-300 ease-out"
         style={{ 
-          width: '850px', 
-          height: '1100px',
-          transform: `scale(${zoom / 100}) rotate(${rotation}deg)`,
+          height: `${virtualizer.getTotalSize()}px`,
+          width: '100%',
+          position: 'relative'
         }}
+        className="max-w-4xl mx-auto"
       >
-        <div className="flex flex-col items-center justify-center h-full text-gray-200">
-             <div className="w-1/2 h-4 bg-gray-100 rounded-full mb-4" />
-             <div className="w-2/3 h-4 bg-gray-100 rounded-full mb-4" />
-             <div className="w-1/3 h-4 bg-gray-100 rounded-full mb-8" />
-             <div className="w-full h-64 bg-gray-50 rounded-xl mx-8" />
-        </div>
+        {virtualizer.getVirtualItems().map((virtualPage) => (
+          <div
+            key={virtualPage.key}
+            style={{
+              position: 'absolute',
+              top: 0,
+              left: 0,
+              width: '100%',
+              height: `${virtualPage.size}px`,
+              transform: `translateY(${virtualPage.start}px)`,
+            }}
+            className="pb-8"
+          >
+            <PageCanvas 
+              index={virtualPage.index}
+              src={pages[virtualPage.index]}
+            />
+          </div>
+        ))}
       </div>
     </div>
+  );
+};
+
+const PageCanvas = ({ index, src }: { index: number; src?: string }) => {
+  const [loaded, setLoaded] = useState(false);
+
+  return (
+    <motion.div 
+      {...({
+        initial: { opacity: 0, y: 20 },
+        animate: { opacity: 1, y: 0 },
+        className: "bg-white shadow-glass-lg rounded-sm overflow-hidden aspect-[1/1.41] flex flex-col relative"
+      } as any)}
+    >
+      <div className="absolute top-4 right-4 bg-black/5 backdrop-blur-md px-2 py-1 rounded text-[10px] font-bold text-gray-500 z-10">
+        PÁGINA {index + 1}
+      </div>
+      
+      {src ? (
+        <img 
+          src={src} 
+          alt={`Página ${index + 1}`}
+          className={cn("w-full h-full object-contain transition-opacity duration-500", loaded ? "opacity-100" : "opacity-0")}
+          onLoad={() => setLoaded(true)}
+        />
+      ) : (
+        <div className="flex-1 flex flex-col items-center justify-center text-gray-200">
+           <FileText size={64} />
+           <p className="mt-4 text-sm font-medium text-gray-400">Página en blanco</p>
+        </div>
+      )}
+
+      {!loaded && src && (
+        <div className="absolute inset-0 flex items-center justify-center bg-gray-50">
+          <Loader2 className="animate-spin text-brand-500" size={32} />
+        </div>
+      )}
+    </motion.div>
   );
 };

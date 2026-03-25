@@ -6,6 +6,7 @@ export interface ProgressPayload {
   pagina: number;
   total: number;
   mensaje: string;
+  etapa?: 'rasterizing' | 'ocr' | 'vlm' | 'indexing';
 }
 
 export function useIngesta() {
