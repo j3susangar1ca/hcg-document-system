@@ -48,13 +48,10 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
 
   return (
     <div className="w-full flex justify-center bg-gray-50/50 p-8 overflow-auto h-full rounded-2xl">
-      <motion.div 
-        initial={{ opacity: 0, y: 20 }}
-        animate={{ opacity: 1, y: 0 }}
-        className="origin-top"
+      <div 
+        className="origin-top shadow-2xl bg-white rounded-xl overflow-hidden"
       >
-        <div className="shadow-2xl bg-white">
-          <Document
+        <Document
           file={`/api/v1/pdfs/${documentId}`}
           options={options}
           onLoadSuccess={onDocumentLoadSuccess}
