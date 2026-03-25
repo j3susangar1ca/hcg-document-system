@@ -1,1 +1,47 @@
     Blocking waiting for file lock on build directory
+   Compiling hcg-document-system-backend v0.1.0 (/home/jesuslangarica/Proyectos/hcg-document-system/src-tauri)
+warning: unused import: `SqlitePool`
+ --> src/api/search.rs:3:17
+  |
+3 | use sqlx::{Row, SqlitePool};
+  |                 ^^^^^^^^^^
+  |
+  = note: `#[warn(unused_imports)]` (part of `#[warn(unused)]`) on by default
+
+warning: unused import: `chrono::Local`
+ --> src/core/audit.rs:2:5
+  |
+2 | use chrono::Local;
+  |     ^^^^^^^^^^^^^
+
+warning: unused import: `DateTime`
+ --> src/core/backup.rs:1:14
+  |
+1 | use chrono::{DateTime, Local, Timelike};
+  |              ^^^^^^^^
+
+warning: unused import: `flate2::write::GzEncoder`
+ --> src/core/backup.rs:2:5
+  |
+2 | use flate2::write::GzEncoder;
+  |     ^^^^^^^^^^^^^^^^^^^^^^^^
+
+warning: unused import: `Path`
+ --> src/core/backup.rs:6:17
+  |
+6 | use std::path::{Path, PathBuf};
+  |                 ^^^^
+
+warning: field `shutdown_rx` is never read
+  --> src/core/backup.rs:31:5
+   |
+28 | pub struct BackupSystem {
+   |            ------------ field in this struct
+...
+31 |     shutdown_rx: watch::Receiver<bool>,
+   |     ^^^^^^^^^^^
+   |
+   = note: `#[warn(dead_code)]` (part of `#[warn(unused)]`) on by default
+
+warning: `hcg-document-system-backend` (bin "hcg-document-system-backend") generated 6 warnings (run `cargo fix --bin "hcg-document-system-backend" -p hcg-document-system-backend` to apply 5 suggestions)
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 13.46s
