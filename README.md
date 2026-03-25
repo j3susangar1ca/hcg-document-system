@@ -1375,15 +1375,15 @@ stateDiagram-v2
 
 ```mermaid
 %%{init: {
-  'theme': 'dark',
-  'themeVariables': {
-    'primaryColor': '#1a1a2e',
-    'primaryTextColor': '#ffffff',
-    'primaryBorderColor': '#0078D4',
-    'lineColor': '#00d9ff',
-    'secondaryColor': '#16213e',
-    'tertiaryColor': '#0f3460',
-    'background': '#0d1117'
+  "theme": "dark",
+  "themeVariables": {
+    "primaryColor": "#1a1a2e",
+    "primaryTextColor": "#ffffff",
+    "primaryBorderColor": "#0078D4",
+    "lineColor": "#00d9ff",
+    "secondaryColor": "#16213e",
+    "tertiaryColor": "#0f3460",
+    "background": "#0d1117"
   }
 }}%%
 stateDiagram-v2
@@ -1404,10 +1404,10 @@ stateDiagram-v2
         [*] --> MostrarOverlay
         note right of MostrarOverlay
             Overlay traslúcido
-            "Sin conexión con Nodo Maestro"
+            Sin conexión con Nodo Maestro
             Botones de edición bloqueados
         end note
-    end
+    }
 
     HEARTBEAT_FAIL --> CONECTADO: Reconexión exitosa
     HEARTBEAT_FAIL --> SESION_EXPIRADA: JWT > 8 horas
@@ -1415,10 +1415,10 @@ stateDiagram-v2
     state SESION_EXPIRADA {
         [*] --> DialogoModal
         note right of DialogoModal
-            "Sesión expirada"
+            Sesión expirada
             Selector de perfiles
         end note
-    end
+    }
 
     SESION_EXPIRADA --> CONECTADO: Token renovado
 ```
