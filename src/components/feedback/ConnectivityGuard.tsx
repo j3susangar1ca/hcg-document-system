@@ -4,7 +4,8 @@
 import React, { useState, useEffect } from 'react';
 import { WifiOff, Wifi } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { API_BASE, getAuthHeader } from '@/lib/api';
+import { API_BASE } from '@/lib/utils';
+import { getAuthHeader } from '@/lib/api';
 
 export const ConnectivityGuard = () => {
   const [status, setStatus] = useState<'online' | 'offline' | 'checking'>('checking');

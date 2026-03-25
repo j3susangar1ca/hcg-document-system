@@ -1,6 +1,8 @@
 import { useState } from 'react';
 import { listen } from '@tauri-apps/api/event';
-import { invoke } from '@tauri-apps/api/core';
+import { invoke } from '@tauri-apps/api';
+
+const isTauri = typeof window !== 'undefined' && '__TAURI__' in window;
 
 export interface ProgressPayload {
   pagina: number;
@@ -15,6 +17,10 @@ export function useIngesta() {
   const [result, setResult] = useState<any>(null);
 
   const iniciarIngesta = async (filePath: string) => {
+    if (!isTauri) {
+      console.warn('Tauri no está disponible - función deshabilitada');
+      return;
+    }
     setIsAnalyzing(true);
     setResult(null);
     try {
