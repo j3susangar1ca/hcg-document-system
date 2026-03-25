@@ -4,6 +4,8 @@ use sqlx::SqlitePool;
 use std::path::{Path, PathBuf};
 use base64::{Engine as _, engine::general_purpose};
 use sqlx::Row;
+use std::process::Stdio;
+use tokio::process::Command;
 
 #[derive(Serialize, Clone)]
 struct ProgressPayload {
@@ -82,16 +84,52 @@ fn build_olmocr_prompt(anchor_text: &str, img_b64: &str) -> serde_json::Value {
 }
 
 // Funciones auxiliares
+// FASE 1: Rasterización REAL con mutool (MuPDF)
 async fn rasterizar_pdf(path: &Path) -> Vec<PathBuf> {
-    // Implementación real usaría mupdf para generar imágenes en /tmp o data/
-    println!("Rasterizando {:?}", path);
-    // Placeholder: En un entorno real, esto llamaría a mupdf-sys o un wrapper CLI
-    vec![PathBuf::from("/tmp/page1.png")] 
+    let temp_dir = std::env::temp_dir().join("hcg_ingesta");
+    let _ = tokio::fs::create_dir_all(&temp_dir).await;
+    let output_pattern = temp_dir.join("page_%d.png");
+
+    // Convierte PDF a PNG a 300 DPI para alta calidad de OCR
+    let status = Command::new("mutool")
+        .args([
+            "draw", 
+            "-o", output_pattern.to_str().unwrap(), 
+            "-r", "300", 
+            path.to_str().unwrap()
+        ])
+        .status()
+        .await;
+
+    if let Ok(s) = status {
+        if s.success() {
+            let mut paths: Vec<PathBuf> = std::fs::read_dir(&temp_dir)
+                .unwrap()
+                .filter_map(|e| e.ok().map(|entry| entry.path()))
+                .collect();
+            paths.sort(); // Asegurar orden de páginas
+            return paths;
+        }
+    }
+    vec![]
 }
 
+// FASE 2: OCR REAL con Tesseract (Específico para español)
 async fn ejecutar_tesseract(path: &Path) -> String {
-    // Implementación usando std::process::Command para llamar al binario de Tesseract
-    "Ejemplo de texto OCR extraído por Tesseract".to_string()
+    let output = Command::new("tesseract")
+        .arg(path)
+        .arg("-") // Enviar resultado a stdout
+        .arg("-l")
+        .arg("spa+eng") // Soporte bilingüe para documentos técnicos
+        .output()
+        .await;
+
+    match output {
+        Ok(out) if out.status.success() => {
+            String::from_utf8_lossy(&out.stdout).trim().to_string()
+        }
+        _ => "Error en OCR".to_string(),
+    }
 }
 
 async fn cargar_imagen_base64(path: &Path) -> String {
