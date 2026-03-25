@@ -27,6 +27,7 @@ impl Default for BackupConfig {
 pub struct BackupSystem {
     config: BackupConfig,
     db: SqlitePool,
+    #[allow(dead_code)]
     _shutdown_rx: watch::Receiver<bool>,
 }
 
