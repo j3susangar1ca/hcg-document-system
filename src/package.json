@@ -15,7 +15,9 @@
     "@fluentui/react-components": "latest",
     "lucide-react": "latest",
     "clsx": "latest",
-    "tailwind-merge": "latest"
+    "tailwind-merge": "latest",
+    "@tauri-apps/api": "^2.0.0-rc",
+    "framer-motion": "latest"
   },
   "devDependencies": {
     "typescript": "latest",
