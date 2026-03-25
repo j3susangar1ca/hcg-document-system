@@ -93,7 +93,8 @@ async fn inicializar_base_de_datos(pool: &sqlx::SqlitePool) {
             nombre_archivo UNINDEXED,
             tipo_documento UNINDEXED,
             numero_pagina UNINDEXED,
-            texto_plano tokenize='unicode61'
+            texto_plano,
+            tokenize='unicode61'
         );
 
         -- 7. Trigger de Auto-Indexación

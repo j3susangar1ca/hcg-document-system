@@ -1,9 +1,8 @@
-use chrono::{DateTime, Local, Timelike};
-use flate2::write::GzEncoder;
+use chrono::{Local, Timelike};
 use sqlx::SqlitePool;
 use std::fs::{self, File};
 use std::io::Write;
-use std::path::{Path, PathBuf};
+use std::path::PathBuf;
 use std::sync::Arc;
 use tokio::sync::watch;
 use zip::write::FileOptions;
@@ -28,7 +27,7 @@ impl Default for BackupConfig {
 pub struct BackupSystem {
     config: BackupConfig,
     db: SqlitePool,
-    shutdown_rx: watch::Receiver<bool>,
+    _shutdown_rx: watch::Receiver<bool>,
 }
 
 impl BackupSystem {
@@ -66,7 +65,7 @@ pub fn spawn_backup_scheduler(db: SqlitePool, config: Option<BackupConfig>) -> w
     let (shutdown_tx, shutdown_rx) = watch::channel(false);
     let cfg = config.unwrap_or_default();
     let _ = fs::create_dir_all(&cfg.backup_dir);
-    let backup_sys = Arc::new(BackupSystem { config: cfg.clone(), db, shutdown_rx });
+    let backup_sys = Arc::new(BackupSystem { config: cfg.clone(), db, _shutdown_rx: shutdown_rx });
 
     tokio::spawn(async move {
         loop {
@@ -85,7 +84,7 @@ pub async fn list_backups_endpoint() -> impl IntoResponse {
 }
 
 pub async fn create_backup_endpoint(State(state): State<Arc<AppState>>) -> impl IntoResponse {
-    let sys = BackupSystem { config: BackupConfig::default(), db: state.write_db.clone(), shutdown_rx: watch::channel(false).1 };
+    let sys = BackupSystem { config: BackupConfig::default(), db: state.write_db.clone(), _shutdown_rx: watch::channel(false).1 };
     match sys.perform_backup().await {
         Ok(path) => (StatusCode::OK, Json(serde_json::json!({"success": true, "path": path.display().to_string()}))),
         Err(e) => (StatusCode::INTERNAL_SERVER_ERROR, Json(serde_json::json!({"success": false, "error": e}))),
