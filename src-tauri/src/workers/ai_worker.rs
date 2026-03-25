@@ -1,4 +1,4 @@
-use tauri::{AppHandle, Manager};
+use tauri::{AppHandle, Manager, Emitter};
 use serde::{Serialize, Deserialize};
 use sqlx::SqlitePool;
 use std::path::{Path, PathBuf};
@@ -27,8 +27,8 @@ pub async fn iniciar_proceso_ingesta(
         for (i, img_path) in paginas_paths.iter().enumerate() {
             let num_pag = i + 1;
             
-            // Emitir evento de progreso al Frontend (V1.5 uses emit_all)
-            let _ = app_handle.emit_all("ingesta:progreso", ProgressPayload {
+            // Emitir evento de progreso al Frontend (V2 uses emit)
+            let _ = app_handle.emit("ingesta:progreso", ProgressPayload {
                 pagina: num_pag,
                 total: total_paginas,
                 mensaje: format!("Procesando página {} de {}", num_pag, total_paginas),
@@ -48,14 +48,14 @@ pub async fn iniciar_proceso_ingesta(
                     let _ = guardar_pagina_db(&db_pool, &document_id, num_pag, &json_data, &anchor_text).await;
                 }
                 Err(e) => {
-                    let _ = app_handle.emit_all("ingesta:error", format!("Error en página {}: {}", num_pag, e));
+                    let _ = app_handle.emit("ingesta:error", format!("Error en página {}: {}", num_pag, e));
                 }
             }
         }
 
         // Finalización: Actualizar status a INDEXADO
         let _ = marcar_documento_indexado(&db_pool, &document_id).await;
-        let _ = app_handle.emit_all("ingesta:completa", document_id);
+        let _ = app_handle.emit("ingesta:completa", document_id);
     });
 }
 
