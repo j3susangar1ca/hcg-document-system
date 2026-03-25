@@ -7,6 +7,19 @@ import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 const inter = Inter({ subsets: ["latin"] });
 
+// Polyfill for Promise.withResolvers (needed by pdfjs-dist 4.4+)
+if (typeof Promise.withResolvers === "undefined") {
+  // @ts-expect-error polyfill
+  Promise.withResolvers = function () {
+    let resolve, reject;
+    const promise = new Promise((res, rej) => {
+      resolve = res;
+      reject = rej;
+    });
+    return { promise, resolve, reject };
+  };
+}
+
 export default function RootLayout({
   children,
 }: {

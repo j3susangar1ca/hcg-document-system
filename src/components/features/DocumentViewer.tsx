@@ -24,13 +24,15 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
   const documentId = propDocumentId || selectedDocumentId || '';
 
   useEffect(() => {
-    // Configurar worker de PDF.js usando la versión de la librería importada
-    // Usamos el worker de https://cdn.jsdelivr.net/npm/... para mayor estabilidad en Next.js
-    const workerUrl = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
-    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+    // Configurar worker de PDF.js usando la versión de la librería
+    const version = pdfjs.version || '5.4.296';
+    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${version}/build/pdf.worker.min.mjs`;
     
     // Recuperar token para el middleware JWT de Axum
-    setToken(typeof window !== 'undefined' ? localStorage.getItem('jwt_token') || '' : '');
+    if (typeof window !== 'undefined') {
+      const savedToken = localStorage.getItem('jwt_token');
+      if (savedToken) setToken(savedToken);
+    }
   }, []);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
@@ -49,9 +51,10 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
       <motion.div 
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="shadow-2xl bg-white origin-top"
+        className="origin-top"
       >
-        <Document
+        <div className="shadow-2xl bg-white">
+          <Document
           file={`/api/v1/pdfs/${documentId}`}
           options={options}
           onLoadSuccess={onDocumentLoadSuccess}
@@ -80,7 +83,7 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
             </div>
           ))}
         </Document>
-      </motion.div>
+      </div>
     </div>
   );
 };
