@@ -170,10 +170,9 @@ export const EnhancedCommandBar = () => {
                         <p className="font-semibold text-gray-900">
                           {result.title}
                         </p>
-                        <p 
-                          className="text-sm text-gray-500 truncate"
-                          dangerouslySetInnerHTML={{ __html: result.snippet }}
-                        />
+                        <p className="text-sm text-gray-500 truncate">
+                          {result.snippet.replace(/<b>/g, '').replace(/<\/b>/g, '')}
+                        </p>
                       </div>
                       <ChevronRight className={cn(
                         "transition-colors",

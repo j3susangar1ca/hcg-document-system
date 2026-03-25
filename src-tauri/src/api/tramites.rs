@@ -29,7 +29,7 @@ pub async fn get_tramites_handler(
     State(state): State<Arc<AppState>>,
 ) -> Result<impl IntoResponse, (StatusCode, Json<serde_json::Value>)> {
     let rows = sqlx::query_as::<_, TramiteRow>(
-        "SELECT id, folio, status, remitente, asunto, fecha_ingreso FROM documentos ORDER BY fecha_ingreso DESC"
+        "SELECT id, folio, status, remitente, asunto, creado_at as fecha_ingreso FROM tramites ORDER BY creado_at DESC"
     )
     .fetch_all(&state.read_db)
     .await
@@ -67,7 +67,7 @@ pub async fn update_tramite_handler(
 
     // 🔄 1. Cambio de Estado ("PENDIENTE" -> "FINALIZADO")
     if let Some(ref status) = payload.status {
-        sqlx::query("UPDATE documentos SET status = ? WHERE id = ?")
+        sqlx::query("UPDATE tramites SET status = ? WHERE id = ?")
             .bind(status)
             .bind(&tramite_id)
             .execute(&mut *tx).await.map_err(|_| {
@@ -77,7 +77,7 @@ pub async fn update_tramite_handler(
 
     // 👤 2. Asignación de Responsable
     if let Some(ref responsable) = payload.responsable_id {
-        sqlx::query("UPDATE documentos SET responsable_id = ? WHERE id = ?")
+        sqlx::query("UPDATE tramites SET asignado_a = ? WHERE id = ?")
             .bind(responsable)
             .bind(&tramite_id)
             .execute(&mut *tx).await.map_err(|_| {
@@ -88,7 +88,7 @@ pub async fn update_tramite_handler(
     // 🔗 3. Vinculación de Folios (Trazabilidad Documental)
     if let Some(ref expediente_padre_id) = payload.expediente_relacionado_id {
         // Vincula el documento actual como "hijo" de otro expediente/folio principal
-        sqlx::query("UPDATE documentos SET expediente_padre_id = ? WHERE id = ?")
+        sqlx::query("UPDATE tramites SET expediente_padre_id = ? WHERE id = ?")
             .bind(expediente_padre_id)
             .bind(&tramite_id)
             .execute(&mut *tx).await.map_err(|_| {
@@ -97,7 +97,7 @@ pub async fn update_tramite_handler(
         
         // Auditoría específica para trazabilidad legal
         let audit_link_id = Uuid::new_v4().to_string();
-        sqlx::query("INSERT INTO audit_log (id, tabla_afectada, registro_id, accion, usuario_id, detalles) VALUES (?, 'documentos', ?, 'VINCULACION', ?, ?)")
+        sqlx::query("INSERT INTO audit_log (id, tabla_afectada, registro_id, accion, usuario_id, detalles) VALUES (?, 'tramites', ?, 'VINCULACION', ?, ?)")
             .bind(audit_link_id)
             .bind(&tramite_id)
             .bind(&user_id)
@@ -111,7 +111,7 @@ pub async fn update_tramite_handler(
     let audit_id = Uuid::new_v4().to_string();
     let detalles = serde_json::to_string(&payload).unwrap_or_else(|_| "{}".to_string());
     
-    sqlx::query("INSERT INTO audit_log (id, tabla_afectada, registro_id, accion, usuario_id, detalles) VALUES (?, 'documentos', ?, 'UPDATE', ?, ?)")
+    sqlx::query("INSERT INTO audit_log (id, tabla_afectada, registro_id, accion, usuario_id, detalles) VALUES (?, 'tramites', ?, 'UPDATE', ?, ?)")
         .bind(audit_id)
         .bind(&tramite_id)
         .bind(&user_id)

@@ -11,8 +11,8 @@ export const ConnectivityGuard = () => {
   useEffect(() => {
     const checkServer = async () => {
       try {
-        // Intentamos un HEAD al endpoint público de la API
-        const res = await fetch('/api/v1/auth/login', { method: 'HEAD' });
+        // Intentamos un GET al endpoint de backups (que siempre responde 200/405 si el servidor está vivo)
+        const res = await fetch('/api/v1/system/backups', { method: 'GET' });
         setStatus(res.ok || res.status === 405 ? 'online' : 'offline');
       } catch {
         setStatus('offline');
