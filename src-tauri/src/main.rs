@@ -20,6 +20,104 @@ pub struct AppState {
     pub jwt_secret: String,
 }
 
+
+async fn inicializar_base_de_datos(pool: &sqlx::SqlitePool) {
+    let schema = r#"
+        -- 1. Tabla de Usuarios
+        CREATE TABLE IF NOT EXISTS usuarios (
+            id TEXT PRIMARY KEY,
+            nombre TEXT NOT NULL,
+            email TEXT UNIQUE NOT NULL,
+            rol TEXT CHECK(rol IN ('ADMIN', 'OPERADOR', 'VISOR')),
+            jwt_token_hash TEXT,
+            activo INTEGER DEFAULT 1,
+            creado_at DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- 2. Tabla de Documentos Físicos
+        CREATE TABLE IF NOT EXISTS documentos (
+            id TEXT PRIMARY KEY,
+            nombre_original TEXT NOT NULL,
+            ruta_blob TEXT,
+            hash_sha256 TEXT UNIQUE,
+            status TEXT CHECK(status IN ('PENDIENTE', 'INDEXADO', 'ERROR')),
+            subido_por TEXT,
+            creado_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (subido_por) REFERENCES usuarios(id)
+        );
+
+        -- 3. Tabla de Páginas (Extraídas por olmOCR)
+        CREATE TABLE IF NOT EXISTS paginas (
+            id TEXT PRIMARY KEY,
+            documento_id TEXT NOT NULL,
+            numero_pagina INTEGER,
+            datos_extraidos JSON,
+            texto_plano TEXT,
+            procesado_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (documento_id) REFERENCES documentos(id) ON DELETE CASCADE
+        );
+
+        -- 4. Tabla de Trámites / Expedientes
+        CREATE TABLE IF NOT EXISTS tramites (
+            id TEXT PRIMARY KEY,
+            documento_id TEXT UNIQUE,
+            folio TEXT UNIQUE,
+            asunto TEXT,
+            remitente TEXT,
+            prioridad TEXT CHECK(prioridad IN ('BAJA', 'MEDIA', 'ALTA', 'URGENTE')),
+            status TEXT CHECK(status IN ('ABIERTO', 'EN_PROCESO', 'CERRADO')),
+            asignado_a TEXT,
+            fecha_limite DATETIME,
+            expediente_padre_id TEXT,
+            creado_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            actualizado_at DATETIME DEFAULT CURRENT_TIMESTAMP,
+            FOREIGN KEY (documento_id) REFERENCES documentos(id),
+            FOREIGN KEY (asignado_a) REFERENCES usuarios(id)
+        );
+
+        -- 5. Tabla de Auditoría (Audit Log)
+        CREATE TABLE IF NOT EXISTS audit_log (
+            id TEXT PRIMARY KEY,
+            tabla_afectada TEXT,
+            registro_id TEXT,
+            accion TEXT,
+            usuario_id TEXT,
+            detalles TEXT,
+            fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP
+        );
+
+        -- 6. Motor de Búsqueda FTS5 (Tabla Virtual)
+        CREATE VIRTUAL TABLE IF NOT EXISTS busqueda_paginas_fts USING fts5(
+            documento_id UNINDEXED,
+            tramite_id UNINDEXED,
+            nombre_archivo UNINDEXED,
+            tipo_documento UNINDEXED,
+            numero_pagina UNINDEXED,
+            texto_plano tokenize='unicode61'
+        );
+
+        -- 7. Trigger de Auto-Indexación
+        CREATE TRIGGER IF NOT EXISTS trg_paginas_ai AFTER INSERT ON paginas
+        BEGIN
+            INSERT INTO busqueda_paginas_fts(documento_id, tramite_id, nombre_archivo, tipo_documento, numero_pagina, texto_plano)
+            VALUES (
+                new.documento_id,
+                (SELECT id FROM tramites WHERE documento_id = new.documento_id),
+                (SELECT nombre_original FROM documentos WHERE id = new.documento_id),
+                'PDF',
+                new.numero_pagina,
+                new.texto_plano
+            );
+        END;
+    "#;
+
+    // Ejecutamos el DDL
+    match sqlx::query(schema).execute(pool).await {
+        Ok(_) => println!("✅ Esquema de base de datos verificado/creado correctamente."),
+        Err(e) => eprintln!("❌ Error al inicializar el esquema: {}", e),
+    }
+}
+
 #[tokio::main]
 async fn main() {
     dotenv().ok();
@@ -37,6 +135,9 @@ async fn main() {
     let write_pool = SqlitePoolOptions::new()
         .max_connections(1)
         .connect_with(write_options).await.unwrap();
+
+    // 👉 Inicializar Base de Datos
+    inicializar_base_de_datos(&write_pool).await;
 
     // 3. AHORA creamos el Pool de Lectura (el archivo ya existe garantizado)
     let read_pool = SqlitePoolOptions::new()
