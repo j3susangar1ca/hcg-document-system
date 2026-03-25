@@ -14,8 +14,13 @@ export default function RootLayout({
   return (
     <html lang="es">
       <body className={inter.className}>
+        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-blue-600">
+          Saltar al contenido principal
+        </a>
         <FluentProvider theme={webLightTheme}>
-          {children}
+          <div id="main-content" tabIndex={-1}>
+            {children}
+          </div>
         </FluentProvider>
       </body>
     </html>

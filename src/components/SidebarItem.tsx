@@ -19,10 +19,11 @@ export const SidebarItem: React.FC<SidebarItemProps> = ({ icon: Icon, label, act
     <button
       onClick={onClick}
       className={cn(
-        "p-3 rounded-xl transition-all duration-200 group relative",
+        "p-3 rounded-xl transition-all duration-200 group relative focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-blue-600 focus-visible:ring-offset-2",
         active ? "bg-blue-600 text-white shadow-lg shadow-blue-200" : "text-gray-400 hover:bg-gray-100"
       )}
       title={label}
+      aria-label={label}
     >
       <Icon size={24} />
       {active && (

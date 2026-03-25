@@ -47,11 +47,14 @@ export const GlobalCommandBar = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="p-6 flex items-center gap-4 border-b">
-              <Search className="text-blue-600" size={24} />
+              <Search className="text-blue-600" size={24} aria-hidden="true" />
+              <label htmlFor="global-search-input" className="sr-only">Búsqueda inteligente</label>
               <input 
+                id="global-search-input"
                 autoFocus placeholder="Búsqueda inteligente en documentos indexados..."
-                className="flex-1 bg-transparent border-none outline-none text-lg font-medium"
+                className="flex-1 bg-transparent border-none outline-none text-lg font-medium focus-visible:ring-2 focus-visible:ring-blue-600 rounded-md px-2"
                 onChange={(e) => handleSearch(e.target.value)}
+                aria-label="Búsqueda inteligente en documentos indexados"
               />
               <kbd className="px-2 py-1 bg-gray-100 rounded text-xs font-bold text-gray-400">ESC</kbd>
             </div>

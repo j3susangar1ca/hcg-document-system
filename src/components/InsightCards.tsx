@@ -42,10 +42,10 @@ export const SummaryTable = ({ points }: { points: string[] }) => (
 );
 
 export const ActionCard = ({ action }: { action: any }) => (
-  <div className="p-6 bg-blue-600 text-white rounded-3xl shadow-lg shadow-blue-200">
+  <div className="p-6 bg-[#0078D4] text-white rounded-3xl shadow-lg shadow-blue-200">
     <h4 className="font-bold mb-2">Sugerencia de Trámite</h4>
-    <p className="text-blue-50 text-sm mb-4">{action?.descripcion || "Recomendando siguiente acción basada en historial..."}</p>
-    <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl text-sm font-medium">
+    <p className="text-white text-sm mb-4">{action?.descripcion || "Recomendando siguiente acción basada en historial..."}</p>
+    <div className="bg-white/20 backdrop-blur-md px-4 py-2 rounded-xl text-sm font-medium border border-white/30 text-white">
       {action?.tipo || "Clasificando..."}
     </div>
   </div>
