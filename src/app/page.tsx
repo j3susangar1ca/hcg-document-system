@@ -108,12 +108,15 @@ export default function Dashboard() {
          )}
 
          {/* Info Badge when not analyzing */}
-         {!isAnalyzing && !result && (
-           <div className="absolute bottom-8 left-1/2 -translate-x-1/2 px-4 py-2 bg-white/80 backdrop-blur-md rounded-full border border-gray-100 shadow-sm text-xs text-gray-500 flex items-center gap-2">
-             <Search size={14} />
-             Presiona <kbd className="px-1.5 py-0.5 bg-gray-100 rounded border font-mono">Ctrl + K</kbd> para buscar
-           </div>
-         )}
+          {!isAnalyzing && !result && (
+            <div className="absolute bottom-8 left-1/2 -translate-x-1/2 flex flex-col items-center gap-6">
+              <ScannerAction />
+              <div className="px-4 py-2 bg-white/80 backdrop-blur-md rounded-full border border-gray-100 shadow-sm text-xs text-gray-500 flex items-center gap-2">
+                <Search size={14} />
+                Presiona <kbd className="px-1.5 py-0.5 bg-gray-100 rounded border font-mono">Ctrl + K</kbd> para buscar
+              </div>
+            </div>
+          )}
       </section>
 
       {/* 3. Panel de Inteligencia (Insight) */}
