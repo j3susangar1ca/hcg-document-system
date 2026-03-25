@@ -7,6 +7,7 @@ use axum::{routing::{get, post}, Router, middleware};
 use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
 use std::sync::Arc;
 use tokio::net::TcpListener;
+use tower_http::services::ServeDir;
 
 mod api;
 mod core;
@@ -80,6 +81,7 @@ async fn main() {
 
     // 2. Definición de rutas y Middleware
     let app = Router::new()
+        .nest_service("/", ServeDir::new("../src/out")) // Servir el frontend compilado (Next.js out)
         .route("/api/v1/auth/login", post(api::auth::login_handler))
         .route("/api/v1/tramites", get(api::tramites::get_tramites_handler))
         .route("/api/v1/pdfs/:id", get(api::documents::stream_pdf_handler))
