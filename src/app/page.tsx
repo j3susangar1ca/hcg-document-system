@@ -11,7 +11,8 @@ const DocumentViewerEnhanced = dynamic(
 import { EnhancedIdentityCard, SummaryTable, ActionCard } from '@/components/features/InsightCards';
 import { EnhancedCommandBar } from '@/components/layout/CommandBar';
 import { ConnectivityGuard } from '@/components/feedback/ConnectivityGuard';
-import { useState } from 'react';
+import { ScannerAction } from '@/components/features/ScannerAction';
+import { useState, useEffect } from 'react';
 import { 
   Copy, 
   Sparkles,
@@ -42,6 +43,13 @@ interface AnalysisResult {
 export default function Dashboard() {
   const { iniciarIngesta, progreso, isAnalyzing } = useIngesta();
   const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    setMounted(true);
+  }, []);
+
+  if (!mounted) return null;
 
   const handleTestFinish = () => {
     setResult({

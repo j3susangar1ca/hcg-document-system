@@ -19,8 +19,10 @@ export default function LibraryPage() {
   const [tramites, setTramites] = useState<Tramite[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
+  const [mounted, setMounted] = useState(false);
 
   useEffect(() => {
+    setMounted(true);
     const fetchTramites = async () => {
       try {
         const token = localStorage.getItem('jwt_token'); // Asumiendo que guardaste el token en el login
@@ -41,6 +43,8 @@ export default function LibraryPage() {
 
     fetchTramites();
   }, []);
+
+  if (!mounted) return null;
 
   const filteredTramites = tramites.filter(t => 
     t.asunto?.toLowerCase().includes(searchQuery.toLowerCase()) || 
