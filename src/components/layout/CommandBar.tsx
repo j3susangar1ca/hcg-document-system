@@ -12,6 +12,10 @@ interface SearchResult {
   snippet: string;
   type: 'document' | 'tramite' | 'user';
   documento_id?: string;
+  curp?: string;
+  email?: string;
+  fecha?: string;
+  folio?: string;
 }
 
 export const EnhancedCommandBar = () => {
@@ -108,7 +112,7 @@ export const EnhancedCommandBar = () => {
               exit: { opacity: 0, scale: 0.95, y: -20 },
               transition: { type: 'spring', stiffness: 400, damping: 30 },
               className: "fixed left-1/2 top-[15vh] z-[101] w-full max-w-2xl -translate-x-1/2 rounded-3xl bg-white shadow-2xl overflow-hidden",
-              onClick: (e) => e.stopPropagation()
+              onClick: (e: React.MouseEvent) => e.stopPropagation()
             } as any)}
           >
             <div className="flex items-center gap-4 px-6 py-4 border-b border-gray-100">

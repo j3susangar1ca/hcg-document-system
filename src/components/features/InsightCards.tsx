@@ -14,17 +14,20 @@ import { motion } from 'framer-motion';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
 import { Skeleton } from '@/components/ui/Skeleton';
 
+interface IdentityData {
+  nombre: string;
+  cargo: string;
+  curp?: string;
+  email?: string;
+  fecha?: string;
+  folio?: string;
+}
+
 interface IdentityProps {
-  identity: {
-    nombre: string;
-    cargo: string;
-    curp: string;
-    email: string;
-    fecha: string;
-    folio?: string;
-  };
+  identity: Partial<IdentityData>;
   isLoading?: boolean;
 }
+
 
 export const EnhancedIdentityCard = ({ identity, isLoading }: IdentityProps) => {
   if (isLoading) {
@@ -94,7 +97,7 @@ export const EnhancedIdentityCard = ({ identity, isLoading }: IdentityProps) => 
   );
 };
 
-const DetailItem = ({ icon: Icon, label, value }: { icon: any, label: string, value: string }) => (
+const DetailItem = ({ icon: Icon, label, value }: { icon: any, label: string, value?: string }) => (
   <div className="flex items-start gap-2 p-3 bg-gray-50/50 rounded-xl">
     <Icon size={16} className="text-gray-400 mt-0.5" />
     <div className="min-w-0">
