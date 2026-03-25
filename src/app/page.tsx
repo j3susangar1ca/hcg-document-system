@@ -1,12 +1,12 @@
 "use client";
 
-import { SidebarItem } from '@/components/SidebarItem';
+import { SidebarItem } from '@/components/layout/SidebarItem';
 import { useIngesta } from '@/hooks/useIngesta';
-import { ProgressValidation } from '@/components/ProgressValidation';
-import { DocumentViewer } from '@/components/DocumentViewer';
-import { IdentityCard, SummaryTable, ActionCard } from '@/components/InsightCards';
-import { GlobalCommandBar } from '@/components/CommandBar';
-import { ConnectivityGuard } from '@/components/ConnectivityGuard';
+import { ProgressValidation } from '@/components/features/ProgressValidation';
+import { DocumentViewer } from '@/components/features/DocumentViewer';
+import { IdentityCard, SummaryTable, ActionCard } from '@/components/features/InsightCards';
+import { GlobalCommandBar } from '@/components/layout/CommandBar';
+import { ConnectivityGuard } from '@/components/feedback/ConnectivityGuard';
 import { useState } from 'react';
 import { 
   LayoutDashboard, 
