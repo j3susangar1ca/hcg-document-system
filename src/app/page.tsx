@@ -6,7 +6,15 @@ import { EnhancedProgressValidation } from '@/components/features/ProgressValida
 import dynamic from 'next/dynamic';
 const DocumentViewerEnhanced = dynamic(
   () => import('@/components/features/DocumentViewer').then(mod => mod.DocumentViewerEnhanced),
-  { ssr: false }
+  { 
+    ssr: false,
+    loading: () => (
+      <div className="p-10 text-center flex flex-col items-center gap-4">
+        <div className="w-12 h-12 border-4 border-brand-200 border-t-brand-600 rounded-full animate-spin" />
+        <p className="animate-pulse text-brand-600 font-bold">Cargando motor de PDF...</p>
+      </div>
+    )
+  }
 );
 import { EnhancedIdentityCard, SummaryTable, ActionCard } from '@/components/features/InsightCards';
 import { EnhancedCommandBar } from '@/components/layout/CommandBar';

@@ -1,14 +1,18 @@
-// src/components/features/DocumentViewer.tsx
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { motion } from 'framer-motion';
 import { Loader2, AlertTriangle } from 'lucide-react';
+import { API_BASE } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
 
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
+
+// ⚠️ CRÍTICO: Esta línea debe estar FUERA de la función del componente
+// para evitar que Next.js/Webpack intenten procesar el worker en el servidor
+pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface DocumentViewerEnhancedProps {
   documentId?: string;
@@ -24,11 +28,7 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
   const documentId = propDocumentId || selectedDocumentId || '';
 
   useEffect(() => {
-    // Configurar worker de PDF.js usando la versión de la librería
-    const version = pdfjs.version || '5.4.296';
-    pdfjs.GlobalWorkerOptions.workerSrc = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${version}/build/pdf.worker.min.mjs`;
-    
-    // Recuperar token para el middleware JWT de Axum
+    // Solo recuperamos el token aquí para el middleware JWT de Axum
     if (typeof window !== 'undefined') {
       const savedToken = localStorage.getItem('jwt_token');
       if (savedToken) setToken(savedToken);
@@ -40,19 +40,22 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
   };
 
   const options = React.useMemo(() => ({
-    httpHeaders: { 'Authorization': `Bearer ${token}` },
-    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`
+    httpHeaders: { 'Authorization': `Bearer ${token}` }
   }), [token]);
 
   if (!documentId || !token) return null;
 
   return (
     <div className="w-full flex justify-center bg-gray-50/50 p-8 overflow-auto h-full rounded-2xl">
-      <div 
-        className="origin-top shadow-2xl bg-white rounded-xl overflow-hidden"
+      <motion.div 
+        {...({
+          initial: { opacity: 0, y: 20 },
+          animate: { opacity: 1, y: 0 },
+          className: "shadow-2xl bg-white origin-top rounded-xl overflow-hidden"
+        } as any)}
       >
         <Document
-          file={`/api/v1/pdfs/${documentId}`}
+          file={`${API_BASE}/api/v1/pdfs/${documentId}`}
           options={options}
           onLoadSuccess={onDocumentLoadSuccess}
           loading={
@@ -80,7 +83,7 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
             </div>
           ))}
         </Document>
-      </div>
+      </motion.div>
     </div>
   );
 };
