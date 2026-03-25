@@ -42,8 +42,7 @@
       "targets": "all",
       "windows": {
         "certificateThumbprint": null,
-        "digestAlgorithm": "sha256",
-        "timestampServer": ""
+        "digestAlgorithm": "sha256"
       }
     },
     "security": {

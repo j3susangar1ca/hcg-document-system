@@ -20,6 +20,43 @@ pub struct AppState {
     pub write_db: SqlitePool, // Pool para mutaciones (INSERT/UPDATE) - max_connections(1)
 }
 
+// 1. Definición del Comando Tauri
+#[tauri::command]
+async fn iniciar_ingesta(
+    app_state: tauri::State<'_, Arc<AppState>>,
+    handle: tauri::AppHandle,
+    file_path: String,
+) -> Result<String, String> {
+    use uuid::Uuid;
+    use std::path::PathBuf;
+
+    let job_id = Uuid::new_v4().to_string();
+    let path = PathBuf::from(file_path);
+
+    // Verificación básica de existencia del archivo
+    if !path.exists() {
+        return Err("El archivo especificado no existe en el Nodo Maestro.".into());
+    }
+
+    // 2. Despacho Asíncrono al Worker
+    let db_pool = app_state.write_db.clone();
+    let app = handle.clone();
+    let document_id = job_id.clone();
+
+    // Iniciamos el proceso sin esperar a que termine (Fire-and-Forget)
+    tokio::spawn(async move {
+        workers::ai_worker::iniciar_proceso_ingesta(
+            app,
+            db_pool,
+            path,
+            document_id,
+        ).await;
+    });
+
+    // Retornamos el job_id inmediatamente para que la UI no se congele
+    Ok(job_id)
+}
+
 #[tokio::main]
 async fn main() {
     // 1. Configuración de SQLite con separación de lectura/escritura
@@ -61,6 +98,9 @@ async fn main() {
     // 4. Inicio de Tauri
     tauri::Builder::default()
         .manage(shared_state)
+        .invoke_handler(tauri::generate_handler![
+            iniciar_ingesta
+        ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
 }
