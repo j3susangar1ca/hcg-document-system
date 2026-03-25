@@ -20,12 +20,22 @@ pub async fn auth_middleware(
     req: Request,
     next: Next,
 ) -> Result<Response, StatusCode> {
-    let auth_header = req.headers()
-        .get("Authorization")
+    // Intentar obtener de cookie o de header (retrocompatibilidad controlada)
+    let token = req.headers()
+        .get(axum::http::header::COOKIE)
         .and_then(|h| h.to_str().ok())
-        .and_then(|s| s.strip_prefix("Bearer "));
+        .and_then(|cookies| {
+            cookies.split(';').find(|c| c.trim().starts_with("jwt_token="))
+                .map(|c| c.trim().trim_start_matches("jwt_token="))
+        })
+        .or_else(|| {
+            req.headers()
+                .get("Authorization")
+                .and_then(|h| h.to_str().ok())
+                .and_then(|s| s.strip_prefix("Bearer "))
+        });
 
-    match auth_header {
+    match token {
         Some(token) => {
             let validation = Validation::default();
             decode::<Claims>(
