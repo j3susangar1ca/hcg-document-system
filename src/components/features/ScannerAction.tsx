@@ -31,17 +31,19 @@ export const ScannerAction = () => {
 
   return (
     <motion.button
-      whileHover={{ scale: 1.05 }}
-      whileTap={{ scale: 0.95 }}
-      onClick={handleScan}
-      disabled={isAnalyzing || isWarmingUp}
-      className={`
-        flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-white shadow-brand transition-all
-        ${isAnalyzing || isWarmingUp 
-          ? 'bg-gray-400 cursor-not-allowed' 
-          : 'bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700'
-        }
-      `}
+      {...({
+        whileHover: { scale: 1.05 },
+        whileTap: { scale: 0.95 },
+        onClick: handleScan,
+        disabled: isAnalyzing || isWarmingUp,
+        className: `
+          flex items-center gap-3 px-6 py-4 rounded-2xl font-bold text-white shadow-brand transition-all
+          ${isAnalyzing || isWarmingUp 
+            ? 'bg-gray-400 cursor-not-allowed' 
+            : 'bg-gradient-to-r from-brand-500 to-brand-600 hover:from-brand-600 hover:to-brand-700'
+          }
+        `
+      } as any)}
     >
       {isWarmingUp ? (
         <>

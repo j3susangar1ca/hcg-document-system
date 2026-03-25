@@ -34,8 +34,11 @@ export const DocumentViewerEnhanced = ({ documentId, zoom = 1 }: DocumentViewerE
   return (
     <div className="w-full flex justify-center bg-gray-50/50 p-8 overflow-auto h-full rounded-2xl">
       <motion.div 
-        initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}
-        className="shadow-2xl bg-white origin-top"
+        {...({
+          initial: { opacity: 0, y: 20 }, 
+          animate: { opacity: 1, y: 0 },
+          className: "shadow-2xl bg-white origin-top"
+        } as any)}
       >
         <Document
           file={{

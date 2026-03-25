@@ -82,16 +82,22 @@ export default function LibraryPage() {
           </div>
         ) : (
           <motion.div 
-            variants={staggerContainer}
-            initial="hidden" animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            {...({
+              variants: staggerContainer,
+              initial: "hidden", 
+              animate: "visible",
+              className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+            } as any)}
           >
             <AnimatePresence>
               {filteredTramites.map((tramite) => (
                 <motion.div 
-                  key={tramite.id} variants={fadeInUp}
-                  whileHover={{ y: -5, scale: 1.01 }}
-                  className="p-6 bg-white/90 backdrop-blur-xl rounded-3xl border border-gray-100 shadow-glass cursor-pointer group"
+                  key={tramite.id} 
+                  {...({
+                    variants: fadeInUp,
+                    whileHover: { y: -5, scale: 1.01 },
+                    className: "p-6 bg-white/90 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-glass cursor-pointer group"
+                  } as any)}
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="p-3 bg-brand-50 text-brand-600 rounded-xl group-hover:bg-brand-500 group-hover:text-white transition-colors">
