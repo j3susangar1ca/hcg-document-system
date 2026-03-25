@@ -9,7 +9,7 @@ pub struct AuditFilter {
     pub limit: Option<u32>,
 }
 
-#[derive(Serialize)]
+#[derive(Debug, Serialize, sqlx::FromRow)]
 pub struct AuditEntry {
     pub id: String,
     pub accion: String,
@@ -51,19 +51,13 @@ pub async fn get_audit_log(
 ) -> impl IntoResponse {
     let limit = filter.limit.unwrap_or(50).min(100);
     
-    let rows = sqlx::query("SELECT id, accion, detalles as descripcion, fecha_creacion FROM audit_log ORDER BY fecha_creacion DESC LIMIT ?")
-        .bind(limit as i64)
-        .fetch_all(&state.read_db)
-        .await
-        .unwrap_or_default();
-    
-    use sqlx::Row;
-    let entries: Vec<AuditEntry> = rows.into_iter().map(|r| AuditEntry {
-        id: r.get("id"),
-        accion: r.get("accion"),
-        descripcion: r.get::<Option<String>, _>("descripcion").unwrap_or_default(),
-        fecha_creacion: r.get::<Option<String>, _>("fecha_creacion").unwrap_or_default(),
-    }).collect();
+    let entries = sqlx::query_as::<_, AuditEntry>(
+        "SELECT id, accion, detalles as descripcion, fecha_creacion FROM audit_log ORDER BY fecha_creacion DESC LIMIT ?"
+    )
+    .bind(limit as i64)
+    .fetch_all(&state.read_db)
+    .await
+    .unwrap_or_default();
 
     (StatusCode::OK, Json(serde_json::json!({ "auditoria": entries })))
 }
