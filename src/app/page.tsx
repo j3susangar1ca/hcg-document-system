@@ -5,6 +5,8 @@ import { useIngesta } from '@/hooks/useIngesta';
 import { ProgressValidation } from '@/components/ProgressValidation';
 import { DocumentViewer } from '@/components/DocumentViewer';
 import { IdentityCard, SummaryTable, ActionCard } from '@/components/InsightCards';
+import { GlobalCommandBar } from '@/components/CommandBar';
+import { ConnectivityGuard } from '@/components/ConnectivityGuard';
 import { useState } from 'react';
 import { 
   LayoutDashboard, 
@@ -78,8 +80,9 @@ export default function Dashboard() {
     <main 
       className="flex h-screen w-screen bg-white/80 backdrop-blur-md overflow-hidden text-gray-900"
       onDragOver={(e) => e.preventDefault()}
-      onDrop={handleFileDrop}
     >
+      <ConnectivityGuard />
+      <GlobalCommandBar />
       
       {/* 1. Navegación Global (Ancla) */}
       <nav className="w-20 bg-white/40 backdrop-blur-xl border-r border-gray-200/50 flex flex-col items-center py-8 gap-8 z-30">

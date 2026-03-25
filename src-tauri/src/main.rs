@@ -15,6 +15,8 @@ mod db;
 mod hardware;
 mod workers;
 
+use crate::hardware::capturar_documento;
+
 // Estado compartido de la aplicación
 pub struct AppState {
     pub read_db: SqlitePool,  // Pool para consultas (SELECT)
@@ -55,6 +57,20 @@ async fn iniciar_ingesta(
     });
 
     // Retornamos el job_id inmediatamente para que la UI no se congele
+    Ok(job_id)
+}
+
+#[tauri::command]
+async fn escanear_y_procesar(
+    app_state: tauri::State<'_, Arc<AppState>>,
+    handle: tauri::AppHandle,
+) -> Result<String, String> {
+    // 1. Llamada física al hardware (SANE/Fedora)
+    let path = capturar_documento().await?; 
+    
+    // 2. Disparar el proceso de ingesta automáticamente tras el escaneo
+    let job_id = iniciar_ingesta(app_state, handle, path.to_string_lossy().to_string()).await?;
+    
     Ok(job_id)
 }
 
@@ -101,7 +117,8 @@ async fn main() {
     tauri::Builder::default()
         .manage(shared_state)
         .invoke_handler(tauri::generate_handler![
-            iniciar_ingesta
+            iniciar_ingesta,
+            escanear_y_procesar
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
