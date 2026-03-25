@@ -4,7 +4,7 @@
 import React, { useState, useEffect } from 'react';
 import { WifiOff, Wifi } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { API_BASE } from '@/lib/utils';
+import { API_BASE, getAuthHeader } from '@/lib/api';
 
 export const ConnectivityGuard = () => {
   const [status, setStatus] = useState<'online' | 'offline' | 'checking'>('checking');
@@ -13,7 +13,10 @@ export const ConnectivityGuard = () => {
     const checkServer = async () => {
       try {
         // Intentamos un GET al endpoint de backups (que siempre responde 200/405 si el servidor está vivo)
-        const res = await fetch(`${API_BASE}/api/v1/system/backups`, { method: 'GET' });
+        const res = await fetch(`${API_BASE}/api/v1/system/backups`, { 
+          method: 'GET',
+          headers: getAuthHeader()
+        });
         setStatus(res.ok || res.status === 405 ? 'online' : 'offline');
       } catch {
         setStatus('offline');

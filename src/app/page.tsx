@@ -49,9 +49,15 @@ interface AnalysisResult {
 }
 
 export default function Dashboard() {
-  const { iniciarIngesta, progreso, isAnalyzing } = useIngesta();
+  const { iniciarIngesta, progreso, isAnalyzing, result: aiResult } = useIngesta();
   const [result, setResult] = useState<AnalysisResult | null>(null);
   const [mounted, setMounted] = useState(false);
+
+  useEffect(() => {
+    if (aiResult) {
+      setResult(aiResult);
+    }
+  }, [aiResult]);
 
   useEffect(() => {
     setMounted(true);

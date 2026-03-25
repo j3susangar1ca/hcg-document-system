@@ -4,7 +4,7 @@ import React, { useState, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { useUIStore } from '@/store/useUIStore';
-import { API_BASE } from '@/lib/utils'; //
+import { API_BASE, getAuthHeader } from '@/lib/api';
 
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
@@ -19,17 +19,11 @@ interface DocumentViewerEnhancedProps {
 
 export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }: DocumentViewerEnhancedProps) => {
   const [numPages, setNumPages] = useState<number>(0);
-  const [token, setToken] = useState<string>('');
-  const selectedDocumentId = useUIStore(s => s.selectedDocumentId); //
+  const selectedDocumentId = useUIStore(s => s.selectedDocumentId);
 
   const documentId = propDocumentId || selectedDocumentId || '';
 
-  useEffect(() => {
-    if (typeof window !== 'undefined') {
-      const savedToken = localStorage.getItem('jwt_token');
-      if (savedToken) setToken(savedToken);
-    }
-  }, []);
+  // El token se maneja ahora a través de getAuthHeader() directamente en las opciones del Document
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -37,13 +31,13 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
 
   // ✅ CORRECCIÓN: Opciones sin espacios y con recursos necesarios para fuentes CJK/Especiales
   const options = useMemo(() => ({
-    httpHeaders: { 'Authorization': `Bearer ${token}` },
+    httpHeaders: getAuthHeader(),
     cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
     cMapPacked: true,
     standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`
-  }), [token]);
+  }), []);
 
-  if (!documentId || !token) return null;
+  if (!documentId) return null;
 
   // Construcción de la URL usando el puerto 8080 en desarrollo
   const fileUrl = `${API_BASE}/api/v1/pdfs/${documentId}`;

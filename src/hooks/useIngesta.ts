@@ -12,9 +12,11 @@ export interface ProgressPayload {
 export function useIngesta() {
   const [progreso, setProgreso] = useState<ProgressPayload>({ pagina: 0, total: 0, mensaje: '' });
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [result, setResult] = useState<any>(null);
 
   const iniciarIngesta = async (filePath: string) => {
     setIsAnalyzing(true);
+    setResult(null);
     try {
       // Disparo asíncrono al backend de Rust (Tauri v2 invoke)
       const jobId = await invoke<string>('iniciar_ingesta', { filePath });
@@ -25,9 +27,10 @@ export function useIngesta() {
         setProgreso(event.payload);
       });
 
-      // También podríamos escuchar 'ingesta:completa' e 'ingesta:error'
-      const unlistenComplete = await listen<string>('ingesta:completa', (event) => {
-        console.log(`Job ${event.payload} completed`);
+      // Escuchar el resultado final del análisis
+      const unlistenComplete = await listen<any>('ingesta:completa', (event) => {
+        console.log(`Job completed with result:`, event.payload);
+        setResult(event.payload);
         setIsAnalyzing(false);
       });
 
@@ -41,5 +44,5 @@ export function useIngesta() {
     }
   };
 
-  return { iniciarIngesta, progreso, isAnalyzing, setIsAnalyzing };
+  return { iniciarIngesta, progreso, isAnalyzing, result, setIsAnalyzing };
 }
