@@ -10,6 +10,9 @@
   },
   "dependencies": {
     "@fluentui/react-components": "latest",
+    "@tailwindcss/forms": "^0.5.11",
+    "@tailwindcss/typography": "^0.5.19",
+    "@tanstack/react-virtual": "^3.13.23",
     "@tauri-apps/api": "^2.0.0-rc",
     "clsx": "latest",
     "framer-motion": "^12.38.0",
@@ -17,7 +20,9 @@
     "next": "latest",
     "react": "latest",
     "react-dom": "latest",
-    "tailwind-merge": "latest"
+    "tailwind-merge": "latest",
+    "tailwindcss-animate": "^1.0.7",
+    "zustand": "^5.0.12"
   },
   "devDependencies": {
     "@types/node": "latest",
