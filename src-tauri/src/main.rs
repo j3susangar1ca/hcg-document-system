@@ -1,5 +1,6 @@
 use axum::{routing::{get, post, patch}, Router, http::{Method, header}};
-use sqlx::sqlite::SqlitePoolOptions;
+use sqlx::sqlite::{SqlitePoolOptions, SqliteConnectOptions};
+use std::str::FromStr;
 use std::sync::Arc;
 use tokio::net::TcpListener;
 use tower_http::{services::ServeDir, cors::{CorsLayer, Any}};
@@ -28,13 +29,19 @@ async fn main() {
     let server_ip = env::var("SERVER_IP").unwrap_or_else(|_| "0.0.0.0:8080".to_string());
     let frontend_path = env::var("FRONTEND_DIST_PATH").unwrap_or_else(|_| "../src/out".to_string());
 
-    let read_pool = SqlitePoolOptions::new()
-        .max_connections(8)
-        .connect(&format!("{}?mode=ro", db_url)).await.unwrap();
+    // 2. INVERSIÓN: Primero creamos el Pool de Escritura y forzamos la creación del archivo
+    let write_options = SqliteConnectOptions::from_str(&db_url)
+        .expect("URL de base de datos inválida")
+        .create_if_missing(true); // <--- Esto es la magia que evita el crash
 
     let write_pool = SqlitePoolOptions::new()
         .max_connections(1)
-        .connect(&db_url).await.unwrap();
+        .connect_with(write_options).await.unwrap();
+
+    // 3. AHORA creamos el Pool de Lectura (el archivo ya existe garantizado)
+    let read_pool = SqlitePoolOptions::new()
+        .max_connections(8)
+        .connect(&format!("{}?mode=ro", db_url)).await.unwrap();
 
     let shared_state = Arc::new(AppState {
         read_db: read_pool.clone(),
