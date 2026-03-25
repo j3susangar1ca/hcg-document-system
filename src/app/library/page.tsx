@@ -3,8 +3,10 @@
 
 import React, { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Search, Filter, Clock, AlertCircle } from 'lucide-react';
+import { FileText, Search, Filter, Clock } from 'lucide-react';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
+import { useUIStore } from '@/store/useUIStore';
+import { useRouter } from 'next/navigation';
 
 interface Tramite {
   id: string;
@@ -20,12 +22,14 @@ export default function LibraryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
+  const setSelectedDocument = useUIStore(s => s.setSelectedDocument);
+  const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
     const fetchTramites = async () => {
       try {
-        const token = localStorage.getItem('jwt_token'); // Asumiendo que guardaste el token en el login
+        const token = localStorage.getItem('jwt_token');
         const res = await fetch('/api/v1/tramites', {
           headers: { Authorization: `Bearer ${token}` }
         });
@@ -50,6 +54,11 @@ export default function LibraryPage() {
     t.asunto?.toLowerCase().includes(searchQuery.toLowerCase()) || 
     t.folio?.toLowerCase().includes(searchQuery.toLowerCase())
   );
+
+  const handleDocumentClick = (id: string) => {
+    setSelectedDocument(id);
+    router.push('/');
+  };
 
   return (
     <div className="flex-1 h-screen overflow-y-auto bg-surface-base p-10">
@@ -100,6 +109,7 @@ export default function LibraryPage() {
                   {...({
                     variants: fadeInUp,
                     whileHover: { y: -5, scale: 1.01 },
+                    onClick: () => handleDocumentClick(tramite.id),
                     className: "p-6 bg-white/90 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-glass cursor-pointer group"
                   } as any)}
                 >

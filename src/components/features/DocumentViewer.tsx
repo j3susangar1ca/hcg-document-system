@@ -5,18 +5,23 @@ import React, { useState, useEffect } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
 import { motion } from 'framer-motion';
 import { Loader2, AlertTriangle } from 'lucide-react';
+import { useUIStore } from '@/store/useUIStore';
 
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 
 interface DocumentViewerEnhancedProps {
-  documentId: string;
+  documentId?: string;
   zoom?: number;
 }
 
-export const DocumentViewerEnhanced = ({ documentId, zoom = 1 }: DocumentViewerEnhancedProps) => {
+export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }: DocumentViewerEnhancedProps) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [token, setToken] = useState<string>('');
+  const selectedDocumentId = useUIStore(s => s.selectedDocumentId);
+
+  // El ID del documento puede venir del prop (dashboard) o del store global (biblioteca)
+  const documentId = propDocumentId || selectedDocumentId || '';
 
   useEffect(() => {
     // Configurar worker de PDF.js
