@@ -59,6 +59,13 @@ export default function LibraryPage() {
     router.push('/');
   };
 
+  const containerProps: any = {
+    variants: staggerContainer,
+    initial: "hidden", 
+    animate: "visible",
+    className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
+  };
+
   return (
     <div className="flex-1 h-screen overflow-y-auto bg-surface-base p-10">
       <div className="max-w-7xl mx-auto space-y-8">
@@ -93,39 +100,36 @@ export default function LibraryPage() {
              ))}
           </div>
         ) : (
-          <motion.div 
-            variants={staggerContainer}
-            initial="hidden"
-            animate="visible"
-            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          >
+          <motion.div {...(containerProps as any)}>
             <AnimatePresence>
-              {filteredTramites.map((tramite) => (
-                <motion.div 
-                  key={tramite.id} 
-                  variants={fadeInUp}
-                  whileHover={{ y: -5, scale: 1.01 }}
-                  onClick={() => handleDocumentClick(tramite.id)}
-                  className="p-6 bg-white/90 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-glass cursor-pointer group"
-                >
-                  <div className="flex justify-between items-start mb-4">
-                    <div className="p-3 bg-brand-50 text-brand-600 rounded-xl group-hover:bg-brand-500 group-hover:text-white transition-colors">
-                      <FileText size={24} />
+              {filteredTramites.map((tramite) => {
+                const itemProps: any = {
+                  variants: fadeInUp,
+                  whileHover: { y: -5, scale: 1.01 },
+                  onClick: () => handleDocumentClick(tramite.id),
+                  className: "p-6 bg-white/90 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-glass cursor-pointer group"
+                };
+                return (
+                  <motion.div key={tramite.id} {...itemProps}>
+                    <div className="flex justify-between items-start mb-4">
+                      <div className="p-3 bg-brand-50 text-brand-600 rounded-xl group-hover:bg-brand-500 group-hover:text-white transition-colors">
+                        <FileText size={24} />
+                      </div>
+                      <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full">
+                        {tramite.status}
+                      </span>
                     </div>
-                    <span className="px-3 py-1 bg-gray-100 text-gray-600 text-xs font-bold rounded-full">
-                      {tramite.status}
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{tramite.folio}</h3>
-                  <p className="text-sm text-brand-600 font-semibold mb-3">{tramite.remitente}</p>
-                  <p className="text-sm text-gray-500 line-clamp-2 mb-4 leading-relaxed">{tramite.asunto}</p>
-                  
-                  <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
-                    <Clock size={14} />
-                    {new Date(tramite.fecha_ingreso).toLocaleDateString('es-MX')}
-                  </div>
-                </motion.div>
-              ))}
+                    <h3 className="text-lg font-bold text-gray-900 mb-1 line-clamp-1">{tramite.folio}</h3>
+                    <p className="text-sm text-brand-600 font-semibold mb-3">{tramite.remitente}</p>
+                    <p className="text-sm text-gray-500 line-clamp-2 mb-4 leading-relaxed">{tramite.asunto}</p>
+                    
+                    <div className="flex items-center gap-2 text-xs text-gray-400 font-medium">
+                      <Clock size={14} />
+                      {new Date(tramite.fecha_ingreso).toLocaleDateString('es-MX')}
+                    </div>
+                  </motion.div>
+                );
+              })}
             </AnimatePresence>
           </motion.div>
         )}

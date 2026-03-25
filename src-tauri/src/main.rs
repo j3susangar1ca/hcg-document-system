@@ -143,7 +143,9 @@ async fn main() {
     // 3. AHORA creamos el Pool de Lectura (el archivo ya existe garantizado)
     let read_pool = SqlitePoolOptions::new()
         .max_connections(8)
-        .connect(&format!("{}?mode=ro", db_url)).await.unwrap();
+        .connect(&db_url)
+        .await
+        .expect("Error conectando pool de lectura");
 
     let shared_state = Arc::new(AppState {
         read_db: read_pool.clone(),
