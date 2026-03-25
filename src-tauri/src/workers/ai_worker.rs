@@ -45,7 +45,7 @@ pub async fn iniciar_proceso_ingesta(
             match llamar_vlm_server(prompt).await {
                 Ok(json_data) => {
                     // FASE 4: Persistencia en la tabla PAGE
-                    let _ = guardar_pagina_db(&db_pool, &document_id, num_pag, &json_data, &anchor_text).await;
+                    let _ = guardar_pagina_db(&db_pool, &document_id, num_pag, &json_data).await;
                 }
                 Err(e) => {
                     let _ = app_handle.emit("ingesta:error", format!("Error en página {}: {}", num_pag, e));
@@ -146,19 +146,20 @@ async fn llamar_vlm_server(payload: serde_json::Value) -> Result<String, String>
     Ok(res.text().await.unwrap_or_default())
 }
 
-async fn guardar_pagina_db(pool: &SqlitePool, doc_id: &str, num: usize, content: &str, raw_text: &str) -> Result<(), sqlx::Error> {
-    sqlx::query("INSERT INTO paginas (documento_id, numero, contenido_json, texto_ocr) VALUES (?, ?, ?, ?)")
+async fn guardar_pagina_db(pool: &SqlitePool, doc_id: &str, num: usize, content: &str) -> Result<(), sqlx::Error> {
+    let id = uuid::Uuid::new_v4().to_string();
+    sqlx::query("INSERT INTO paginas (id, documento_id, numero_pagina, datos_extraidos) VALUES (?, ?, ?, ?)")
+        .bind(id)
         .bind(doc_id)
         .bind(num as i64)
         .bind(content)
-        .bind(raw_text)
         .execute(pool)
         .await?;
     Ok(())
 }
 
 async fn marcar_documento_indexado(pool: &SqlitePool, doc_id: &str) -> Result<(), sqlx::Error> {
-    sqlx::query("UPDATE documentos SET estado = 'INDEXADO' WHERE id = ?")
+    sqlx::query("UPDATE documentos SET status = 'INDEXADO' WHERE id = ?")
         .bind(doc_id)
         .execute(pool)
         .await?;
