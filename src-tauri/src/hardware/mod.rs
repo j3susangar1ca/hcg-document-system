@@ -1,5 +1,6 @@
 // src-tauri/src/hardware/mod.rs
 use std::path::PathBuf;
+use std::sync::Arc;
 use std::time::Duration;
 use tokio::process::Command;
 use tokio::time::timeout;

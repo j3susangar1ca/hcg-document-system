@@ -51,11 +51,19 @@ pub async fn get_audit_log(
     Query(filter): Query<AuditFilter>,
 ) -> impl IntoResponse {
     let limit = filter.limit.unwrap_or(50).min(100);
-    let rows = sqlx::query!("SELECT id, accion, detalles as descripcion, fecha_creacion FROM audit_log ORDER BY fecha_creacion DESC LIMIT ?", limit)
-        .fetch_all(&state.read_db).await.unwrap_or_default();
     
+    let rows = sqlx::query("SELECT id, accion, detalles as descripcion, fecha_creacion FROM audit_log ORDER BY fecha_creacion DESC LIMIT ?")
+        .bind(limit as i64)
+        .fetch_all(&state.read_db)
+        .await
+        .unwrap_or_default();
+    
+    use sqlx::Row;
     let entries: Vec<AuditEntry> = rows.into_iter().map(|r| AuditEntry {
-        id: r.id, accion: r.accion, descripcion: r.descripcion.unwrap_or_default(), fecha_creacion: r.fecha_creacion.unwrap_or_default(),
+        id: r.get("id"),
+        accion: r.get("accion"),
+        descripcion: r.get::<Option<String>, _>("descripcion").unwrap_or_default(),
+        fecha_creacion: r.get::<Option<String>, _>("fecha_creacion").unwrap_or_default(),
     }).collect();
 
     (StatusCode::OK, Json(serde_json::json!({ "auditoria": entries })))

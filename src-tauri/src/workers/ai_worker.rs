@@ -185,7 +185,7 @@ async fn llamar_vlm_server(payload: serde_json::Value) -> Result<String, String>
         .json(&payload)
         .send()
         .await
-        .map_err(|e| e.to_string())?;
+        .map_err(|e: reqwest::Error| e.to_string())?;
     
     Ok(res.text().await.unwrap_or_default())
 }
