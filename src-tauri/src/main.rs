@@ -3,11 +3,13 @@
     windows_subsystem = "windows"
 )]
 
-use axum::{routing::{get, post}, Router, middleware};
-use sqlx::sqlite::{SqlitePool, SqlitePoolOptions};
+use axum::{routing::{get, post, patch}, Router, http::{Method, header}};
+use sqlx::sqlite::SqlitePoolOptions;
 use std::sync::Arc;
 use tokio::net::TcpListener;
-use tower_http::services::ServeDir;
+use tower_http::{services::ServeDir, cors::{CorsLayer, Any}};
+use dotenvy::dotenv;
+use std::env;
 
 mod api;
 mod core;
@@ -19,8 +21,9 @@ use crate::hardware::capturar_documento;
 
 // Estado compartido de la aplicación
 pub struct AppState {
-    pub read_db: SqlitePool,  // Pool para consultas (SELECT)
-    pub write_db: SqlitePool, // Pool para mutaciones (INSERT/UPDATE) - max_connections(1)
+    pub read_db: sqlx::SqlitePool,  // Pool para consultas (SELECT)
+    pub write_db: sqlx::SqlitePool, // Pool para mutaciones (INSERT/UPDATE) - max_connections(1)
+    pub jwt_secret: String,
 }
 
 // 1. Definición del Comando Tauri
@@ -76,44 +79,56 @@ async fn escanear_y_procesar(
 
 #[tokio::main]
 async fn main() {
-    // 1. Configuración de SQLite con separación de lectura/escritura
-    let db_path = "oficina_oficios.db";
-    
-    // Asegurarse de que el archivo existe o crearlo si es necesario (sqlx connect lo hará)
+    // 1. Cargar configuración de entorno
+    dotenv().ok();
+    let db_url = env::var("DATABASE_URL").expect("DATABASE_URL debe estar configurada");
+    let jwt_secret = env::var("JWT_SECRET").expect("JWT_SECRET debe estar configurada");
+    let server_ip = env::var("SERVER_IP").unwrap_or_else(|_| "0.0.0.0:8080".to_string());
+    let frontend_path = env::var("FRONTEND_DIST_PATH").unwrap_or_else(|_| "../src/out".to_string());
+
+    // 2. Pools de Base de Datos (Lectura y Escritura)
     let read_pool = SqlitePoolOptions::new()
         .max_connections(8)
-        .connect(&format!("sqlite:{}?mode=ro", db_path)).await.expect("Failed to connect to read pool");
+        .connect(&format!("{}?mode=ro", db_url)).await.unwrap();
 
     let write_pool = SqlitePoolOptions::new()
         .max_connections(1) // Evita SQLITE_BUSY al serializar escrituras
-        .connect(db_path).await.expect("Failed to connect to write pool");
+        .connect(&db_url).await.unwrap();
 
     let shared_state = Arc::new(AppState {
         read_db: read_pool,
         write_db: write_pool,
+        jwt_secret,
     });
 
-    let server_state = shared_state.clone();
+    // 3. Configuración de Seguridad (CORS) para la red LAN
+    let cors = CorsLayer::new()
+        .allow_origin(Any) // En producción LAN, Any es aceptable
+        .allow_methods([Method::GET, Method::POST, Method::PATCH, Method::OPTIONS])
+        .allow_headers([header::AUTHORIZATION, header::CONTENT_TYPE]);
 
-    // 2. Definición de rutas y Middleware
+    // 4. Enrutamiento y Servicio Zero-Install
     let app = Router::new()
-        .nest_service("/", ServeDir::new("../src/out")) // Servir el frontend compilado (Next.js out)
+        // API Pública
         .route("/api/v1/auth/login", post(api::auth::login_handler))
+        // Rutas Protegidas (Requieren JWT)
         .route("/api/v1/tramites", get(api::tramites::get_tramites_handler))
+        .route("/api/v1/tramites/:id", patch(api::tramites::update_tramite_handler))
         .route("/api/v1/pdfs/:id", get(api::documents::stream_pdf_handler))
-        // Ejemplo de aplicación de middleware de autenticación a rutas protegidas
-        .layer(middleware::from_fn(api::auth::auth_middleware))
-        .with_state(server_state);
+        .layer(axum::middleware::from_fn_with_state(shared_state.clone(), api::auth::auth_middleware))
+        .layer(cors)
+        // Servir el Frontend para los Followers (Fallback a index.html para SPA routing)
+        .fallback_service(ServeDir::new(frontend_path).append_index_html_on_directories(true))
+        .with_state(shared_state.clone());
 
-    // 3. Inicio del servidor Axum en la interfaz deseada
+    // 5. Iniciar Servidor Axum
     tokio::spawn(async move {
-        let addr = "192.168.1.100:8080";
-        let listener = TcpListener::bind(addr).await.expect("Failed to bind to address");
-        println!("🚀 Servidor Axum escuchando en http://{}", addr);
+        let listener = TcpListener::bind(&server_ip).await.unwrap();
+        println!("🚀 Servidor Axum y Frontend sirviendo en http://{}", server_ip);
         axum::serve(listener, app).await.unwrap();
     });
 
-    // 4. Inicio de Tauri
+    // 6. Iniciar UI Nativa (Tauri) para el Nodo Maestro
     tauri::Builder::default()
         .manage(shared_state)
         .invoke_handler(tauri::generate_handler![
@@ -121,5 +136,5 @@ async fn main() {
             escanear_y_procesar
         ])
         .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .expect("Error al iniciar Tauri");
 }
