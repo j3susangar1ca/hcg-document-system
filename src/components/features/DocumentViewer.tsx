@@ -1,17 +1,15 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Document, Page, pdfjs } from 'react-pdf';
-import { motion } from 'framer-motion';
 import { Loader2, AlertTriangle } from 'lucide-react';
-import { API_BASE } from '@/lib/utils';
 import { useUIStore } from '@/store/useUIStore';
+import { API_BASE } from '@/lib/utils'; //
 
 import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 
-// ⚠️ CRÍTICO: Esta línea debe estar FUERA de la función del componente
-// para evitar que Next.js/Webpack intenten procesar el worker en el servidor
+// ✅ CORRECCIÓN: Worker global sin espacios y con versión exacta
 pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
 
 interface DocumentViewerEnhancedProps {
@@ -22,13 +20,11 @@ interface DocumentViewerEnhancedProps {
 export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }: DocumentViewerEnhancedProps) => {
   const [numPages, setNumPages] = useState<number>(0);
   const [token, setToken] = useState<string>('');
-  const selectedDocumentId = useUIStore(s => s.selectedDocumentId);
+  const selectedDocumentId = useUIStore(s => s.selectedDocumentId); //
 
-  // El ID del documento puede venir del prop (dashboard) o del store global (biblioteca)
   const documentId = propDocumentId || selectedDocumentId || '';
 
   useEffect(() => {
-    // Solo recuperamos el token aquí para el middleware JWT de Axum
     if (typeof window !== 'undefined') {
       const savedToken = localStorage.getItem('jwt_token');
       if (savedToken) setToken(savedToken);
@@ -39,23 +35,24 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
     setNumPages(numPages);
   };
 
-  const options = React.useMemo(() => ({
-    httpHeaders: { 'Authorization': `Bearer ${token}` }
+  // ✅ CORRECCIÓN: Opciones sin espacios y con recursos necesarios para fuentes CJK/Especiales
+  const options = useMemo(() => ({
+    httpHeaders: { 'Authorization': `Bearer ${token}` },
+    cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
+    cMapPacked: true,
+    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`
   }), [token]);
 
   if (!documentId || !token) return null;
 
+  // Construcción de la URL usando el puerto 8080 en desarrollo
+  const fileUrl = `${API_BASE}/api/v1/pdfs/${documentId}`;
+
   return (
     <div className="w-full flex justify-center bg-gray-50/50 p-8 overflow-auto h-full rounded-2xl">
-      <motion.div 
-        {...({
-          initial: { opacity: 0, y: 20 },
-          animate: { opacity: 1, y: 0 },
-          className: "shadow-2xl bg-white origin-top rounded-xl overflow-hidden"
-        } as any)}
-      >
+      <div className="origin-top shadow-2xl bg-white rounded-xl overflow-hidden">
         <Document
-          file={`${API_BASE}/api/v1/pdfs/${documentId}`}
+          file={fileUrl}
           options={options}
           onLoadSuccess={onDocumentLoadSuccess}
           loading={
@@ -67,7 +64,7 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
           error={
             <div className="p-20 text-center flex flex-col items-center text-red-500">
               <AlertTriangle size={48} className="mb-4" />
-              <p className="font-bold">El archivo ya no está disponible en el servidor o el token expiró.</p>
+              <p className="font-bold text-sm">El archivo no está disponible o el token expiró.</p>
             </div>
           }
         >
@@ -83,7 +80,9 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
             </div>
           ))}
         </Document>
-      </motion.div>
+      </div>
     </div>
   );
 };
+
+
