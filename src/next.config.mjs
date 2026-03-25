@@ -1,7 +1,7 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // ⚠️ LA BALA DE PLATA: Apaga el minificador de SWC que corrompe pdfjs-dist
-  swcMinify: false,
+  swcMinify: true,
   
   webpack: (config) => {
     // Evita que Webpack intente empaquetar librerías exclusivas de Node.js

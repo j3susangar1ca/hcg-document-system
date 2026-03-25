@@ -61,15 +61,25 @@ export const EnhancedCommandBar = () => {
     }
   }, [isOpen]);
 
+  const MAX_QUERY_LENGTH = 200;
+
   const handleSearch = async (text: string) => {
-    setQuery(text);
-    if (text.length < 2) {
+    const sanitized = text.slice(0, MAX_QUERY_LENGTH).trim();
+    setQuery(sanitized);
+
+    if (sanitized.length < 2) {
       setResults([]);
+      return;
+    }
+
+    // Validar caracteres peligrosos
+    if (/[<>"'\\]/.test(sanitized)) {
+      console.warn("Query contiene caracteres no permitidos");
       return;
     }
     
     try {
-      const response = await fetch(`${API_BASE}/api/v1/documentos/search?q=${encodeURIComponent(text)}`);
+      const response = await fetch(`${API_BASE}/api/v1/documentos/search?q=${encodeURIComponent(sanitized)}`);
       const data = await response.json();
       // Map existing results to SearchResult format
       const mappedResults = (data.resultados || []).map((res: any) => ({
@@ -96,24 +106,20 @@ export const EnhancedCommandBar = () => {
       {isOpen && (
         <>
           <motion.div
-            {...({
-              initial: { opacity: 0 },
-              animate: { opacity: 1 },
-              exit: { opacity: 0 },
-              className: "fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm",
-              onClick: () => setIsOpen(false)
-            } as any)}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-[100] bg-black/50 backdrop-blur-sm"
+            onClick={() => setIsOpen(false)}
           />
 
           <motion.div
-            {...({
-              initial: { opacity: 0, scale: 0.95, y: -20 },
-              animate: { opacity: 1, scale: 1, y: 0 },
-              exit: { opacity: 0, scale: 0.95, y: -20 },
-              transition: { type: 'spring', stiffness: 400, damping: 30 },
-              className: "fixed left-1/2 top-[15vh] z-[101] w-full max-w-2xl -translate-x-1/2 rounded-3xl bg-white shadow-2xl overflow-hidden",
-              onClick: (e: React.MouseEvent) => e.stopPropagation()
-            } as any)}
+            initial={{ opacity: 0, scale: 0.95, y: -20 }}
+            animate={{ opacity: 1, scale: 1, y: 0 }}
+            exit={{ opacity: 0, scale: 0.95, y: -20 }}
+            transition={{ type: 'spring', stiffness: 400, damping: 30 }}
+            className="fixed left-1/2 top-[15vh] z-[101] w-full max-w-2xl -translate-x-1/2 rounded-3xl bg-white shadow-2xl overflow-hidden"
+            onClick={(e: React.MouseEvent) => e.stopPropagation()}
           >
             <div className="flex items-center gap-4 px-6 py-4 border-b border-gray-100">
               <Search className="text-gray-400" size={22} />

@@ -9,7 +9,10 @@ import 'react-pdf/dist/Page/TextLayer.css';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 
 // Configuración global del worker (fuera del componente)
-pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+pdfjs.GlobalWorkerOptions.workerSrc = new URL(
+  'pdfjs-dist/build/pdf.worker.min.mjs',
+  import.meta.url
+).toString();
 
 interface DocumentViewerEnhancedProps {
   documentId?: string;
@@ -18,7 +21,6 @@ interface DocumentViewerEnhancedProps {
 
 export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }: DocumentViewerEnhancedProps) => {
   const [numPages, setNumPages] = useState<number>(0);
-  const [token, setToken] = useState<string>('');
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
   
@@ -26,10 +28,10 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
 
   const documentId = propDocumentId || selectedDocumentId || '';
 
-  useEffect(() => {
-    const savedToken = localStorage.getItem('jwt_token');
-    if (savedToken) setToken(savedToken);
-  }, []);
+  // Ya no necesitamos cargar el token manualmente para el visor si usamos cookies
+  // pero el componente espera un 'token' para renderizar. 
+  // Podemos cambiar la lógica para que dependa solo del documentId.
+  const token = "session"; // Placeholder para mantener la estructura actual sin localStorage
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
     setNumPages(numPages);
@@ -45,18 +47,19 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
 
   // Opciones memorizadas para evitar re-renderizados innecesarios
   const options = useMemo(() => ({
-    httpHeaders: { 'Authorization': `Bearer ${token}` },
+    // httpHeaders: { 'Authorization': `Bearer ${token}` }, // Eliminado en favor de cookies
+    withCredentials: true,
     cMapUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/cmaps/`,
     cMapPacked: true,
     standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`
-  }), [token]);
+  }), []);
 
   // Controles de zoom
   const [currentZoom, setCurrentZoom] = useState(zoom);
   const handleZoomIn = () => setCurrentZoom(prev => Math.min(prev + 0.2, 3));
   const handleZoomOut = () => setCurrentZoom(prev => Math.max(prev - 0.2, 0.5));
 
-  if (!documentId || !token) {
+  if (!documentId) {
     return (
       <div className="flex-1 flex items-center justify-center p-8 text-gray-500">
         <div className="text-center">

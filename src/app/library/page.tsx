@@ -1,8 +1,7 @@
-// src/app/library/page.tsx
 'use client';
 
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion, AnimatePresence, HTMLMotionProps } from 'framer-motion';
 import { FileText, Search, Filter, Clock } from 'lucide-react';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
 import { useUIStore } from '@/store/useUIStore';
@@ -23,16 +22,15 @@ export default function LibraryPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
   const [mounted, setMounted] = useState(false);
-  const setSelectedDocument = useUIStore(s => s.setSelectedDocument);
+  const selectDocument = useUIStore(s => s.selectDocument);
   const router = useRouter();
 
   useEffect(() => {
     setMounted(true);
     const fetchTramites = async () => {
       try {
-        const token = localStorage.getItem('jwt_token');
         const res = await fetch(`${API_BASE}/api/v1/tramites`, {
-          headers: { Authorization: `Bearer ${token}` }
+          credentials: 'include' // Enviar cookies automáticamente
         });
         
         if (res.ok) {
@@ -57,7 +55,7 @@ export default function LibraryPage() {
   );
 
   const handleDocumentClick = (id: string) => {
-    setSelectedDocument(id);
+    selectDocument(id);
     router.push('/');
   };
 
@@ -96,23 +94,19 @@ export default function LibraryPage() {
           </div>
         ) : (
           <motion.div 
-            {...({
-              variants: staggerContainer,
-              initial: "hidden", 
-              animate: "visible",
-              className: "grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-            } as any)}
+            variants={staggerContainer}
+            initial="hidden"
+            animate="visible"
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
           >
             <AnimatePresence>
               {filteredTramites.map((tramite) => (
                 <motion.div 
                   key={tramite.id} 
-                  {...({
-                    variants: fadeInUp,
-                    whileHover: { y: -5, scale: 1.01 },
-                    onClick: () => handleDocumentClick(tramite.id),
-                    className: "p-6 bg-white/90 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-glass cursor-pointer group"
-                  } as any)}
+                  variants={fadeInUp}
+                  whileHover={{ y: -5, scale: 1.01 }}
+                  onClick={() => handleDocumentClick(tramite.id)}
+                  className="p-6 bg-white/90 backdrop-blur-xl rounded-2xl border border-gray-100 shadow-glass cursor-pointer group"
                 >
                   <div className="flex justify-between items-start mb-4">
                     <div className="p-3 bg-brand-50 text-brand-600 rounded-xl group-hover:bg-brand-500 group-hover:text-white transition-colors">
