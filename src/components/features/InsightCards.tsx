@@ -1,6 +1,6 @@
 "use client";
 
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { 
   User, 
   ShieldCheck, 
@@ -176,3 +176,56 @@ export const ActionCard = ({ action }: { action: any }) => (
     </div>
   </motion.div>
 );
+
+// Auto-carga de datos extraídos por la IA
+export const InsightCards = () => {
+  const [formData, setFormData] = useState({
+    remitente: '',
+    asunto: '',
+    fecha: ''
+  });
+
+  // Efecto de carga automática al detectar resultado de IA
+  // En producción, se conectaría a useIngesta().result
+  const handleResultUpdate = (result: any) => {
+    if (result) {
+      setFormData({
+        remitente: result.identity?.nombre || result.identity?.name || '',
+        asunto: result.title || result.summary?.[0] || '',
+        fecha: result.action?.deadline || result.identity?.fecha || ''
+      });
+    }
+  };
+
+  return (
+    <div className="space-y-6 p-6 bg-white/40 backdrop-blur-2xl rounded-3xl border border-gray-100">
+      <h2 className="text-xl font-black text-gray-900">Validación de IA</h2>
+      <div className="space-y-4">
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold text-blue-600 uppercase">Remitente Detectado</label>
+          <input 
+            value={formData.remitente}
+            onChange={(e) => setFormData({...formData, remitente: e.target.value})}
+            className="p-3 bg-white rounded-xl border border-blue-50 focus:ring-2 ring-blue-500/20 outline-none text-sm font-medium text-gray-800"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold text-blue-600 uppercase">Asunto</label>
+          <input 
+            value={formData.asunto}
+            onChange={(e) => setFormData({...formData, asunto: e.target.value})}
+            className="p-3 bg-white rounded-xl border border-blue-50 focus:ring-2 ring-blue-500/20 outline-none text-sm font-medium text-gray-800"
+          />
+        </div>
+        <div className="flex flex-col gap-1">
+          <label className="text-xs font-bold text-blue-600 uppercase">Fecha</label>
+          <input 
+            value={formData.fecha}
+            onChange={(e) => setFormData({...formData, fecha: e.target.value})}
+            className="p-3 bg-white rounded-xl border border-blue-50 focus:ring-2 ring-blue-500/20 outline-none text-sm font-medium text-gray-800"
+          />
+        </div>
+      </div>
+    </div>
+  );
+};
