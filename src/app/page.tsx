@@ -13,6 +13,8 @@ const DocumentViewerEnhanced = dynamic(
   { ssr: false, loading: () => <div className="flex-1 bg-gray-100 animate-pulse flex items-center justify-center">Cargando visor...</div> }
 );
 
+type Stage = 'rasterizing' | 'ocr' | 'vlm' | 'indexing';
+
 export default function Dashboard() {
   const { isAnalyzing, progreso, result: aiResult } = useIngesta();
   const [mounted, setMounted] = useState(false);
@@ -36,7 +38,7 @@ export default function Dashboard() {
               current={progreso.pagina}
               total={progreso.total || 10}
               message={progreso.mensaje || "Inicializando motor de IA..."}
-              stage={progreso.etapa as any}
+              stage={progreso.etapa as Stage}
             />
           </div>
         )}
