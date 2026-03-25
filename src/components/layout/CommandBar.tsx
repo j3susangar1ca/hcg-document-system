@@ -4,7 +4,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Search, FileText, ChevronRight, ClipboardList, User, X } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useRouter } from 'next/navigation';
-import { cn } from '@/lib/utils';
+import { cn, API_BASE } from '@/lib/utils';
 
 interface SearchResult {
   id: string;
@@ -69,7 +69,7 @@ export const EnhancedCommandBar = () => {
     }
     
     try {
-      const response = await fetch(`/api/v1/documentos/search?q=${encodeURIComponent(text)}`);
+      const response = await fetch(`${API_BASE}/api/v1/documentos/search?q=${encodeURIComponent(text)}`);
       const data = await response.json();
       // Map existing results to SearchResult format
       const mappedResults = (data.resultados || []).map((res: any) => ({

@@ -7,6 +7,7 @@ import { FileText, Search, Filter, Clock } from 'lucide-react';
 import { staggerContainer, fadeInUp } from '@/lib/animations';
 import { useUIStore } from '@/store/useUIStore';
 import { useRouter } from 'next/navigation';
+import { API_BASE } from '@/lib/utils';
 
 interface Tramite {
   id: string;
@@ -30,7 +31,7 @@ export default function LibraryPage() {
     const fetchTramites = async () => {
       try {
         const token = localStorage.getItem('jwt_token');
-        const res = await fetch('/api/v1/tramites', {
+        const res = await fetch(`${API_BASE}/api/v1/tramites`, {
           headers: { Authorization: `Bearer ${token}` }
         });
         

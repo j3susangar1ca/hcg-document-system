@@ -1,10 +1,11 @@
 // src/hooks/useTramites.ts
+import { API_BASE } from '@/lib/utils';
 
 export const useTramiteMutations = () => {
     const vincularFolio = async (tramiteId: string, expedientePadreId: string) => {
         const token = localStorage.getItem('jwt_token');
         
-        const response = await fetch(`/api/v1/tramites/${tramiteId}`, {
+        const response = await fetch(`${API_BASE}/api/v1/tramites/${tramiteId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -27,7 +28,7 @@ export const useTramiteMutations = () => {
     const cambiarStatus = async (tramiteId: string, status: string) => {
         const token = localStorage.getItem('jwt_token');
         
-        const response = await fetch(`/api/v1/tramites/${tramiteId}`, {
+        const response = await fetch(`${API_BASE}/api/v1/tramites/${tramiteId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
@@ -49,7 +50,7 @@ export const useTramiteMutations = () => {
     const asignarResponsable = async (tramiteId: string, responsableId: string) => {
         const token = localStorage.getItem('jwt_token');
         
-        const response = await fetch(`/api/v1/tramites/${tramiteId}`, {
+        const response = await fetch(`${API_BASE}/api/v1/tramites/${tramiteId}`, {
             method: 'PATCH',
             headers: {
                 'Content-Type': 'application/json',
