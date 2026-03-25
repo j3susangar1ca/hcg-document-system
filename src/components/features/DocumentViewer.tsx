@@ -24,10 +24,13 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
   const documentId = propDocumentId || selectedDocumentId || '';
 
   useEffect(() => {
-    // Configurar worker de PDF.js
-    pdfjs.GlobalWorkerOptions.workerSrc = `https://unpkg.com/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+    // Configurar worker de PDF.js usando la versión de la librería importada
+    // Usamos el worker de https://cdn.jsdelivr.net/npm/... para mayor estabilidad en Next.js
+    const workerUrl = `https://cdn.jsdelivr.net/npm/pdfjs-dist@${pdfjs.version}/build/pdf.worker.min.mjs`;
+    pdfjs.GlobalWorkerOptions.workerSrc = workerUrl;
+    
     // Recuperar token para el middleware JWT de Axum
-    setToken(localStorage.getItem('jwt_token') || '');
+    setToken(typeof window !== 'undefined' ? localStorage.getItem('jwt_token') || '' : '');
   }, []);
 
   const onDocumentLoadSuccess = ({ numPages }: { numPages: number }) => {
@@ -35,7 +38,8 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
   };
 
   const options = React.useMemo(() => ({
-    httpHeaders: { 'Authorization': `Bearer ${token}` }
+    httpHeaders: { 'Authorization': `Bearer ${token}` },
+    standardFontDataUrl: `https://unpkg.com/pdfjs-dist@${pdfjs.version}/standard_fonts/`
   }), [token]);
 
   if (!documentId || !token) return null;
@@ -43,11 +47,9 @@ export const DocumentViewerEnhanced = ({ documentId: propDocumentId, zoom = 1 }:
   return (
     <div className="w-full flex justify-center bg-gray-50/50 p-8 overflow-auto h-full rounded-2xl">
       <motion.div 
-        {...({
-          initial: { opacity: 0, y: 20 }, 
-          animate: { opacity: 1, y: 0 },
-          className: "shadow-2xl bg-white origin-top"
-        } as any)}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="shadow-2xl bg-white origin-top"
       >
         <Document
           file={`/api/v1/pdfs/${documentId}`}
