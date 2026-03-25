@@ -2,7 +2,8 @@
 
 import { Inter } from "next/font/google";
 import "../styles/globals.css";
-import { FluentProvider, webLightTheme } from '@fluentui/react-components';
+import { FluentProvider, webLightTheme, webDarkTheme } from '@fluentui/react-components';
+import { useMediaQuery } from '@/hooks/useMediaQuery';
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -11,18 +12,31 @@ export default function RootLayout({
 }: {
   children: React.ReactNode;
 }) {
+  const isDark = useMediaQuery('(prefers-color-scheme: dark)');
+  const theme = isDark ? webDarkTheme : webLightTheme;
+  
   return (
-    <html lang="es">
-      <body className={inter.className}>
-        <a href="#main-content" className="sr-only focus:not-sr-only focus:absolute focus:z-50 focus:p-4 focus:bg-white focus:text-blue-600">
-          Saltar al contenido principal
-        </a>
-        <FluentProvider theme={webLightTheme}>
-          <div id="main-content" tabIndex={-1}>
+    <html lang="es" className="antialiased">
+      <body className={`${inter.className} font-sans bg-surface-base text-text-primary`}>
+        <FluentProvider theme={theme}>
+          <SkipLink />
+          <main id="main-content" className="flex min-h-screen">
             {children}
-          </div>
+          </main>
         </FluentProvider>
       </body>
     </html>
   );
 }
+
+// Accesibilidad: Skip Link
+const SkipLink = () => (
+  <a
+    href="#main-content"
+    className="sr-only focus:not-sr-only focus:fixed focus:top-4 focus:left-4 
+      focus:z-[9999] focus:px-4 focus:py-2 focus:bg-brand-500 focus:text-white 
+      focus:rounded-lg focus:shadow-lg"
+  >
+    Saltar al contenido principal
+  </a>
+);
