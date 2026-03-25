@@ -32,6 +32,7 @@ pub async fn iniciar_proceso_ingesta(
             return;
         }
 
+        let start_time = std::time::Instant::now();
         let process_result: Result<(), String> = async {
             // FASE 1: Rasterización a 300 DPI para alta precisión
             let paginas_paths = rasterizar_pdf(&file_path, &temp_dir).await?;
@@ -72,11 +73,23 @@ pub async fn iniciar_proceso_ingesta(
                     .map_err(|e| format!("Error en DB para página {}: {}", num_pag, e))?;
             }
 
-            // FASE FINALIZACIÓN: status en lugar de estado
-            marcar_documento_indexado(&db_pool, &document_id)
-                .await
-                .map_err(|e| format!("Error actualizando status a INDEXADO: {}", e))?;
-            
+            let execution_time = start_time.elapsed().as_millis() as u64;
+
+            // 1. Marcar documento en base de datos
+            marcar_documento_indexado(&db_pool, &document_id).await.map_err(|e| format!("Error actualizando status: {}", e))?;
+
+            // 2. Registrar en la auditoría (FTS5 se llena automáticamente vía Triggers de SQLite)
+            if let Err(e) = crate::core::audit::log_ai_document_processed(
+                &db_pool, 
+                &document_id, 
+                &file_path.file_name().unwrap().to_string_lossy(), 
+                total_paginas as u32, 
+                execution_time, 
+                true
+            ).await {
+                eprintln!("Error registrando auditoría: {}", e);
+            }
+
             let _ = app_handle.emit("ingesta:completa", &document_id);
             Ok(())
         }.await;

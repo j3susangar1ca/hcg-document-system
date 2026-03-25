@@ -80,3 +80,17 @@ pub async fn capturar_documento() -> Result<PathBuf, String> {
 
     Ok(output_path)
 }
+
+#[tauri::command]
+pub async fn escanear_y_procesar(
+    app_state: tauri::State<'_, Arc<crate::AppState>>,
+    handle: tauri::AppHandle,
+) -> Result<String, String> {
+    // 1. Llamada física al hardware (SANE/Fedora)
+    let path = capturar_documento().await?; 
+    
+    // 2. Disparar el proceso de ingesta automáticamente tras el escaneo
+    let job_id = crate::workers::iniciar_ingesta(app_state, handle, path.to_string_lossy().to_string()).await?;
+    
+    Ok(job_id)
+}
